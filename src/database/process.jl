@@ -48,7 +48,7 @@ function process_telemetries(
     return process_telemetries(
         tmpackets,
         database,
-        database.variables.keys
+        keys(database.variables) |> collect
     )
 end
 
