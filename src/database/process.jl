@@ -122,22 +122,24 @@ function process_telemetries(
                 # the processed value.
                 deps = _dependency_topological_sort(variable_label, database)
 
-                for var in deps
-                    if !haskey(processed_variables, var)
-                        dep_var_desc = get_variable_description(var, database)
+                if !isnothing(deps)
+                    for var in deps
+                        if !haskey(processed_variables, var)
+                            dep_var_desc = get_variable_description(var, database)
 
-                        dep_raw_value = _get_variable_raw_telemetry(
-                            unpacked_frame,
-                            dep_var_desc
-                        )
+                            dep_raw_value = _get_variable_raw_telemetry(
+                                unpacked_frame,
+                                dep_var_desc
+                            )
 
-                        dep_processed_value = _process_telemetry_variable(
-                            processed_variables,
-                            dep_raw_value,
-                            dep_var_desc
-                        )
+                            dep_processed_value = _process_telemetry_variable(
+                                processed_variables,
+                                dep_raw_value,
+                                dep_var_desc
+                            )
 
-                        processed_variables[var] = dep_processed_value
+                            processed_variables[var] = dep_processed_value
+                        end
                     end
                 end
 

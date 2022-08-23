@@ -19,6 +19,8 @@ function _dependency_topological_sort(
 
     var_deps = get_variable_description(variable_label, database).dependencies
 
+    isnothing(var_deps) && return nothing
+
     for var in var_deps
         _dependency_visit!(visited, sorted, var, database)
     end
