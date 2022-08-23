@@ -33,5 +33,5 @@ end
 Convert the raw telemetry into an `UInt32`.
 """
 function tf_uint32(raw::AbstractVector{UInt8})
-    return reinterpret(UInt32, raw[begin:begin+1]) |> first
+    return reinterpret(UInt32, raw[begin:begin+3]) |> first
 end
