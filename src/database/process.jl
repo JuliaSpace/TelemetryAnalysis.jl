@@ -15,10 +15,13 @@ export process_telemetries
 Process the telemetry packets `tmpackets` using the `database`, returning the
 processed values of **all** registered telemetries.
 
-    process_telemetries(tmpackets::Vector{TelemetryPacket{T}}, database::TelemetryDatabase, telemetries::AbstractVector{Symbol}) where T <: TelemetrySource
+    process_telemetries(tmpackets::Vector{TelemetryPacket{T}}, database::TelemetryDatabase, telemetries::AbstractVector) where T <: TelemetrySource
 
-Process the telemetry packets `tmpackets` using the `database`, converting the
-processed values in `telemetries`.
+Process the telemetry packets `tmpackets` using the `database`. The elements in
+`telemetries` can be a `Symbol` with the telemetry label or a
+`Pair{Symbol, Symbol}`. In the former, the default view will be used. In the
+latter, the variable view will be as specified by the second symbol in the pair.
+For more information, see the section below.
 
     process_telemetries(tmpackets::Vector{TelemetryPacket{T}}, database::TelemetryDatabase, telemetries::Vector{Pair{Symbol, Symbol}}) where T <: TelemetrySource
 
@@ -55,12 +58,21 @@ end
 function process_telemetries(
     tmpackets::Vector{TelemetryPacket{T}},
     database::TelemetryDatabase,
-    telemetries::AbstractVector{Symbol}
+    telemetries::AbstractVector
 ) where T <: TelemetrySource
     return process_telemetries(
         tmpackets,
         database,
-        [t => :processed for t in telemetries]
+        [
+            begin
+                if t isa Pair{Symbol, Symbol}
+                    t
+                else
+                    t => get_variable_description(t, database).default_view
+                end
+            end
+            for t in telemetries
+        ]
     )
 end
 
@@ -101,7 +113,7 @@ function process_telemetries(
         )
 
         for (variable_label, type) in telemetries
-            variable_desc = database.variables[variable_label]
+            variable_desc = get_variable_description(variable_label, database)
 
             raw_value = _get_variable_raw_telemetry(
                 unpacked_frame,
@@ -112,10 +124,10 @@ function process_telemetries(
                 output_dict[Symbol(string(variable_label) * "_raw")] = raw_value
             elseif type == :raw_hex
                 output_dict[Symbol(string(variable_label) * "_raw")] =
-                    raw_value |> _raw_to_hex
+                    raw_value |> raw_to_hex
             elseif type == :raw_bin
                 output_dict[Symbol(string(variable_label) * "_raw")] =
-                    raw_value |> _raw_to_binary
+                    raw_value |> raw_to_binary
             else
 
                 # We need to process all the dependencies first before computing

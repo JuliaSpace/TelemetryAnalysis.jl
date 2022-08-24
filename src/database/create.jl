@@ -65,6 +65,9 @@ Add a variable to the `database`.
 - `alias::Union{Nothing, Symbol}`: An alias of the variable. In this case, the
     function [`get_variable_description`](@ref) will also consider this alias
     when searching. (**Default** = `nothing`)
+- `default_view::Symbol`: Select the default view for this variable during
+    processing. For the list of available options, see
+    [`process_telemetries`](@ref). (**Default** = `:processed`)
 - `dependencies::Union{Nothing, Vector{Symbol}}`: A vector containing a list of
     dependencies required to obtain the processed value of this variable. If it
     is `nothing`, then the variable does not have dependencies.
@@ -96,6 +99,7 @@ function add_variable!(
     size::Integer,
     tf::Function;
     alias::Union{Nothing, Symbol} = nothing,
+    default_view::Symbol = :processed,
     dependencies::Union{Nothing, Vector{Symbol}} = nothing,
     description::String = "",
     endianess::Symbol = :littleendian
@@ -108,6 +112,7 @@ function add_variable!(
 
     database.variables[label] = TelemetryVariableDescription(;
         alias        = alias,
+        default_view = default_view,
         dependencies = dependencies,
         description  = description,
         endianess    = endianess,

@@ -7,7 +7,7 @@
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-export analyze_raw_data
+export analyze_raw_data, checkbit, raw_to_hex, raw_to_binary
 
 function analyze_raw_data(
     raw::AbstractVector{UInt8};
@@ -61,11 +61,21 @@ function analyze_raw_data(
     )
 end
 
-#                              Private functions
-# ==============================================================================
+"""
+    checkbit(raw::T, bit::Integer) where T <: Integer
 
-# Convert a raw telemetry to hexadecimal.
-function _raw_to_hex(raw::AbstractVector{UInt8})
+Check if the `bit` in `raw` is set. The least significant bit is 1.
+"""
+function checkbit(raw::T, bit::Integer) where T <: Integer
+    return (raw & (T(1) << (bit - 1))) > 0
+end
+
+"""
+    raw_to_hex(raw::AbstractVector{UInt8})
+
+Convert the `raw` telemetry to an hexadecimal string.
+"""
+function raw_to_hex(raw::AbstractVector{UInt8})
     hex_buf = IOBuffer(sizehint = 2length(raw) + 2)
     write(hex_buf, "0x")
 
@@ -76,8 +86,12 @@ function _raw_to_hex(raw::AbstractVector{UInt8})
     return String(take!(hex_buf))
 end
 
-# Convert a raw telemetry to binary.
-function _raw_to_binary(raw::AbstractVector{UInt8})
+"""
+    raw_to_binary(raw::AbstractVector{UInt8})
+
+Convert the `raw` telemetry to a binary string.
+"""
+function raw_to_binary(raw::AbstractVector{UInt8})
     hex_buf = IOBuffer(sizehint = 2length(raw) + 2)
     write(hex_buf, "0b")
 
