@@ -47,7 +47,7 @@ function create_telemetry_database(
 end
 
 """
-    add_variable!(database::TelemetryDatabase, label::Symbol, position::Int, size::Int, tf::Function; kwargs...)
+    add_variable!(database::TelemetryDatabase, label::Symbol, [position::Int, size::Int,] tf::Function; kwargs...)
 
 Add a variable to the `database`.
 
@@ -59,6 +59,11 @@ Add a variable to the `database`.
 - `size::Int`: Size of the variable.
 - `tf::Function`: Variable transfer function. For more information, see section
     `Transfer function`.
+
+!!! note
+    The `position` and `size` can be omitted if the variable is obtained only by
+    the processed values of other variables. In this case, the keyword
+    `dependencies` must not be `Nothing`.
 
 # Keywords
 
@@ -122,6 +127,40 @@ function add_variable!(
         tf           = tf,
     )
     return nothing
+end
+
+function add_variable!(
+    database::TelemetryDatabase,
+    label::Symbol,
+    tf::Function;
+    alias::Union{Nothing, Symbol} = nothing,
+    default_view::Symbol = :processed,
+    dependencies::Vector{Symbol},
+    description::String = "",
+    endianess::Symbol = :littleendian
+)
+    label == :timestamp && error("A variable cannot have the label `:timestamp`.")
+
+    if isempty(dependencies)
+        error("A derived variable must have dependencies.")
+    end
+
+    if isempty(description)
+        description = "Variable $label"
+    end
+
+    return add_variable!(
+        database,
+        label,
+        0,
+        0,
+        tf;
+        alias,
+        default_view,
+        dependencies,
+        description,
+        endianess
+    )
 end
 
 #                                   Private
