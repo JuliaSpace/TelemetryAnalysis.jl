@@ -7,6 +7,14 @@ using DataFrames
 using PrettyTables
 using Reexport
 using REPL.TerminalMenus
+using Unitful
+
+const d = Unitful.d
+const h = Unitful.hr
+const m = Unitful.minute
+const s = Unitful.s
+
+export d, h, m, s
 
 @reexport using Crayons
 @reexport using Dates

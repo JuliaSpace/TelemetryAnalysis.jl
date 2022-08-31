@@ -14,16 +14,16 @@ export get_telemetry, init_telemetry_source
 
 Get the telemetry data using the `source` between `start_time` and `end_time`.
 
-    get_telemetry(::Type{T}, start_time::DateTime, interval::Int; unit::Symbol = :s)
+    get_telemetry(::Type{T}, start_time::DateTime, interval)
 
 Get the telemetry data using the `source` from `start_time` up to `start_time +
-interval`. The unit of `interval` can be set by the keyword `unit`, and the
-following values are valid:
+interval`. `interval` must be a number with a time unit. The following units are
+exported:
 
-- `:s`: Seconds;
-- `:m`: Minutes;
-- `:h`: Hours; or
-- `:d`: Days.
+- `s` for seconds;
+- `m` for minutes;
+- `h` for hours; and
+- `d` for day.
 
 If `source` is omitted, the default telemetry source is used. For more
 information, see [`set_default_telemetry_source`](@ref).
@@ -63,21 +63,10 @@ end
 function get_telemetry(
     source::TelemetrySource,
     start_time::DateTime,
-    interval::Int;
-    unit::Symbol = :s
+    interval::Unitful.Quantity
 )
-    end_time = begin
-        if unit == :d
-            start_time + Dates.Day(interval)
-        elseif unit == :h
-            start_time + Dates.Hour(interval)
-        elseif unit == :m
-            start_time + Dates.Minute(interval)
-        else
-            start_time + Dates.Second(interval)
-        end
-     end
-
+    Δt = Second(uconvert(s, interval))
+    end_time = start_time + Δt
     return get_telemetry(source, start_time, end_time)
 end
 
@@ -88,11 +77,11 @@ function get_telemetry(start_time::DateTime, end_time::DateTime)
     return get_telemetry(_DEFAULT_TELEMETRY_SOURCE[], start_time, end_time)
 end
 
-function get_telemetry(start_time::DateTime, interval::Int; unit::Symbol = :s)
+function get_telemetry(start_time::DateTime, interval::Unitful.Quantity)
     !isassigned(_DEFAULT_TELEMETRY_SOURCE) &&
         error("The default telemetry source has not been assigned.")
 
-    return get_telemetry(_DEFAULT_TELEMETRY_SOURCE[], start_time, interval; unit)
+    return get_telemetry(_DEFAULT_TELEMETRY_SOURCE[], start_time, interval)
 end
 
 """
