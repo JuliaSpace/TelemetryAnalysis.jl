@@ -71,7 +71,7 @@ function init_telemetry_source(
 ) where T <: TelemetrySource
     @info "Initializing a telemetry source of type $T..."
 
-    source = _api_init_telemetry_source(T, vargs...; kwargs...)::T
+    source = _api_init_telemetry_source(T, vargs...; kwargs...)::Union{Nothing, T}
 
     if isnothing(source)
         @warn "The telemetry source was not initialized."
