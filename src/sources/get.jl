@@ -28,6 +28,12 @@ exported:
 If `source` is omitted, the default telemetry source is used. For more
 information, see [`set_default_telemetry_source`](@ref).
 
+Some sources may also implement the simplified version of this function:
+
+    get_telemetry(::Type{T})
+
+where all the available telemetry will be fetched.
+
 !!! note
     The telemetry obtained from this function is selected as the default
     telemetry packet.
@@ -70,6 +76,10 @@ function get_telemetry(
     return get_telemetry(source, start_time, end_time)
 end
 
+function get_telemetry(source::T) where T <: TelemetrySource
+    return _api_get_telemetry(source)::Vector{TelemetryPacket{T}}
+end
+
 function get_telemetry(start_time::DateTime, end_time::DateTime)
     !isassigned(_DEFAULT_TELEMETRY_SOURCE) &&
         error("The default telemetry source has not been assigned.")
@@ -83,6 +93,8 @@ function get_telemetry(start_time::DateTime, interval::Unitful.Quantity)
 
     return get_telemetry(_DEFAULT_TELEMETRY_SOURCE[], start_time, interval)
 end
+
+get_telemetry() = get_telemetry(_DEFAULT_TELEMETRY_SOURCE[])
 
 """
     set_default_telemetry_packet(tmpacket::Vector{TelemetryPacket})
