@@ -3,10 +3,12 @@ module TelemetryAnalysis
 import Base: @kwdef, print, show
 import REPL
 
+using CodecZlib
 using DataFrames
 using PrettyTables
 using Reexport
 using REPL.TerminalMenus
+using Serialization
 using Unitful
 
 const d = Unitful.d
@@ -50,5 +52,6 @@ include("./database/transfer_functions.jl")
 include("./sources/api.jl")
 include("./sources/get.jl")
 include("./sources/init.jl")
+include("./sources/save.jl")
 
 end # module
