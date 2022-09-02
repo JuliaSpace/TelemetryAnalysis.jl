@@ -22,7 +22,7 @@ function TelemetryAnalysis._api_init_telemetry_source(::Type{T}, vargs...; kwarg
 ```
 
 This function initializes the source of type `T`. The arguments and keywords can
-be selected arbitrary depending on the source's characteristic. The function
+be selected arbitrarily depending on the source's characteristic. The function
 must return an object of type `T`.
 
 It is advisable to document the arguments and keywords by extending the
@@ -35,6 +35,13 @@ function TelemetryAnalysis._api_get_telemetry(source::T, start_time::DateTime, e
 This function must fetch the telemetry from the source between `start_time` and
 `end_time`. It must return encapsulate each packet in a `TelemetryPacket` and
 return a `Vector{TelemetryPacket}`.
+
+Some sources may also implement the simplified version of `_api_get_telemetry`
+that fetches all the packets available:
+
+```
+function TelemetryAnalysis._api_get_telemetry(source::T)::Vector{TelemetryPacket}
+```
 
 ### Registering the source for interactive use
 
