@@ -9,7 +9,7 @@ TelemetryAnalysis.jl
 A source must fetch telemetry and encapsulate it in a `Vector{TelemetryPacket}`.
 It is defined using a structure with supertype `TelemetrySource`.
 
-```
+```julia
 struct MyTelemetrySource <: TelemetrySource
     ...
 end
@@ -17,7 +17,7 @@ end
 
 It must implement two functions as follows.
 
-```
+```julia
 function TelemetryAnalysis._api_init_telemetry_source(::Type{T}, vargs...; kwargs...)::T
 ```
 
@@ -28,7 +28,7 @@ must return an object of type `T`.
 It is advisable to document the arguments and keywords by extending the
 documentation of the object `init_telemetry_source`.
 
-```
+```julia
 function TelemetryAnalysis._api_get_telemetry(source::T, start_time::DateTime, end_time::DateTime)::Vector{TelemetryPacket}
 ```
 
@@ -39,7 +39,7 @@ return a `Vector{TelemetryPacket}`.
 Some sources may also implement the simplified version of `_api_get_telemetry`
 that fetches all the packets available:
 
-```
+```julia
 function TelemetryAnalysis._api_get_telemetry(source::T)::Vector{TelemetryPacket}
 ```
 
@@ -49,7 +49,7 @@ If the user calls the function `init_telemetry_source()`, the system will
 provide a list of registered sources for the user. However, this functionality
 requires that the source defines the API function:
 
-```
+```julia
 function _api_init_telemetry_source(::Type{T})
 ```
 
@@ -58,6 +58,91 @@ from the user interactively, or define it statically.
 
 A source can be registered for interactive use by:
 
-```
+```julia
 @register_interactive_source <Source structure>
 ```
+
+## Databases
+
+A database must define three information:
+
+1. How to get the timestamp from the telemetry packet;
+2. How to unpack the telemetry packet into raw data; and
+3. The variables inside the telemetry packet.
+
+The database object is created by the function:
+
+```julia
+create_telemetry_database(label::String; kwargs...)
+```
+
+where `label` defined the database label. The available keywords are:
+
+- `get_telemetry_timestamp::Function`: A function that must return the timestamp
+    of a telemetry packet. The API is:
+
+    `get_telemetry_timestamp(tmpacket::TelemetryPacket)::Bool`
+
+    (**Default** = `_default_get_telemetry_timestamp`)
+- `unpack_telemetry::Function`: A function that must return a
+    `AbstractVector{UInt8}` with the telemetry frame unpacked, which will be
+    passed to the transfer functions. If the frame is not valid, it must return
+    `nothing`. The function API must be:
+
+    `unpack_telemetry(tmpacket::TelemetryPacket)::AbstractVector{UInt8}`
+
+    (**Default** = `_default_unpack_telemetry`)
+
+After creating the database, the variables can be added using the function:
+
+```julia
+add_variable!(database::TelemetryDatabase, label::Symbol, [position::Int, size::Int,] tf::Function; kwargs...)
+```
+
+- `database::TelemetryDatabase`: Database.
+- `label::Symbol`: Variable label in the database.
+- `position::Int`: Variable position in the telemetry database.
+- `size::Int`: Size of the variable.
+- `tf::Function`: Variable transfer function. For more information, see section
+    [`Transfer function`](@ref).
+
+!!! note
+    The `position` and `size` can be omitted if the variable is obtained only by
+    the processed values of other variables. In this case, the keyword
+    `dependencies` must not be `Nothing`.
+
+This function allows the following keywords:
+
+- `alias::Union{Nothing, Symbol}`: An alias of the variable. In this case, the
+    function [`get_variable_description`](@ref) will also consider this alias
+    when searching. (**Default** = `nothing`)
+- `default_view::Symbol`: Select the default view for this variable during
+    processing. For the list of available options, see
+    [`process_telemetries`](@ref). (**Default** = `:processed`)
+- `dependencies::Union{Nothing, Vector{Symbol}}`: A vector containing a list of
+    dependencies required to obtain the processed value of this variable. If it
+    is `nothing`, then the variable does not have dependencies.
+    (**Default** = `nothing`)
+- `description::String`: A description about the variable.
+- `endianess::Symbol`: `:littleendian` or `:bigendian` to indicate the endianess
+    of the variable. (**Default** = `:littleendian`)
+
+### Transfer function
+
+The variable transfer function can have one of the following signatures:
+
+```julia
+function tf(unpacked_frame::Vector{UInt8})
+```
+
+Return the processed value of the variable given the `unpacked_frame`, obtained
+from the function `unpack_telemetry` of the database.
+
+```julia
+function tf(raw::Vector{UInt8}, processed_variables::Dict{Symbol, Any})
+```
+
+Return the processed value of the variable given the `unpacked_frame`, obtained
+from the function `unpack_telemetry` of the database, and the set of processed
+variables in `processed_variables`. This signature must be use if the transfer
+function depends on others variables.
