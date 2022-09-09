@@ -52,15 +52,18 @@ function show(
     print(  io, cy * "     Raw data" * cr * " : " * string(num_bytes) * " bytes")
     aux =       cy * "     Metadata" * cr * " : "
 
-    keys_str   = tmpacket.metadata |> keys |> collect
-    field_size = maximum(textwidth.(keys_str))
+    if !isempty(tmpacket.metadata)
+        keys_str   = tmpacket.metadata |> keys |> collect
+        field_size = maximum(textwidth.(keys_str))
 
-    for (k, v) in tmpacket.metadata
-        println(io)
-        padding = field_size - textwidth(k)
-        print(io, aux * cb * string(k) * cr * " "^padding * " => " * string(v))
-        aux = "                "
+        for (k, v) in tmpacket.metadata
+            println(io)
+            padding = field_size - textwidth(k)
+            print(io, aux * cb * string(k) * cr * " "^padding * " => " * string(v))
+            aux = "                "
+        end
     end
+
     return nothing
 end
 
