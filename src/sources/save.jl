@@ -57,6 +57,7 @@ function save_telemetry(
     tms::Vector{TelemetryPacket{T}},
     prefix::String = string(T)
 ) where T <: TelemetrySource
+    # TODO: Should we use JLD instead?
 
     if isempty(tms)
         @warn "The vector with telemetries is empty!"
