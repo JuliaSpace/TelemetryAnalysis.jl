@@ -10,12 +10,13 @@
 export process_telemetries
 
 """
-    process_telemetries(tmpackets::Vector{TelemetryPacket{T}}, database::TelemetryDatabase) where T <: TelemetrySource
+    process_telemetries([tmpackets::Vector{TelemetryPacket{T}}]; database::TelemetryDatabase) where T <: TelemetrySource
 
 Process the telemetry packets `tmpackets` using the `database`, returning the
-processed values of **all** registered telemetries.
+processed values of **all** registered telemetries. If `tmpackets` are not
+passed, the default telemetry packets will be used.
 
-    process_telemetries(tmpackets::Vector{TelemetryPacket{T}}, database::TelemetryDatabase, telemetries::AbstractVector) where T <: TelemetrySource
+    process_telemetries([tmpackets::Vector{TelemetryPacket{T}},] telemetries::AbstractVector; database::TelemetryDatabase) where T <: TelemetrySource
 
 Process the telemetry packets `tmpackets` using the `database`. The elements in
 `telemetries` can be a `Symbol` with the telemetry label or a
@@ -23,7 +24,9 @@ Process the telemetry packets `tmpackets` using the `database`. The elements in
 latter, the variable view will be as specified by the second symbol in the pair.
 For more information, see the section below.
 
-    process_telemetries(tmpackets::Vector{TelemetryPacket{T}}, database::TelemetryDatabase, telemetries::Vector{Pair{Symbol, Symbol}}) where T <: TelemetrySource
+If `tmpackets` are not passed, the default telemetry packets will be used.
+
+    process_telemetries([tmpackets::Vector{TelemetryPacket{T}},] telemetries::Vector{Pair{Symbol, Symbol}}; database::TelemetryDatabase) where T <: TelemetrySource
 
 Process the telemetry packets `tmpackets` using the `database`. The output
 variables are indicated in `telemetries`. It must be a vector of pairs
@@ -38,31 +41,56 @@ The acceptable values for the output format are:
 - `:raw_hex`: A string with the raw value represented in hexadecimal.
 - `:raw_bin`: A string with the raw value represented in binary.
 
+If `tmpackets` are not passed, the default telemetry packets will be used.
+
+!!! info
+    If the keyword argument `database` is not passed, the default database is
+    used.
+
 # Return
 
 This function returns a `DataFrame` in which the columns are the selected
 values. The column names are the variable labels. If the raw value a variable
 must be added, the column will be named `<variable_name>_raw`.
 """
+function process_telemetries(;
+    database::TelemetryDatabase = get_default_database()
+) where T <: TelemetrySource
+    return process_telemetries(
+        get_default_telemetry_packets();
+        database
+    )
+end
+
 function process_telemetries(
-    tmpackets::Vector{TelemetryPacket{T}},
-    database::TelemetryDatabase
+    tmpackets::Vector{TelemetryPacket{T}};
+    database::TelemetryDatabase = get_default_database()
 ) where T <: TelemetrySource
     return process_telemetries(
         tmpackets,
-        database,
-        keys(database.variables) |> collect
+        keys(database.variables) |> collect;
+        database
+    )
+end
+
+function process_telemetries(
+    telemetries::AbstractVector;
+    database::TelemetryDatabase = get_default_database()
+) where T <: TelemetrySource
+    return process_telemetries(
+        get_default_telemetry_packets(),
+        telemetries;
+        database
     )
 end
 
 function process_telemetries(
     tmpackets::Vector{TelemetryPacket{T}},
-    database::TelemetryDatabase,
-    telemetries::AbstractVector
+    telemetries::AbstractVector;
+    database::TelemetryDatabase = get_default_database()
 ) where T <: TelemetrySource
     return process_telemetries(
         tmpackets,
-        database,
         [
             begin
                 if t isa Pair{Symbol, Symbol}
@@ -72,14 +100,26 @@ function process_telemetries(
                 end
             end
             for t in telemetries
-        ]
+        ];
+        database
+    )
+end
+
+function process_telemetries(
+    telemetries::Vector{Pair{Symbol, Symbol}};
+    database::TelemetryDatabase = get_default_database()
+) where T <: TelemetrySource
+    return process_telemetries(
+        get_default_telemetry_packets(),
+        telemetries;
+        database
     )
 end
 
 function process_telemetries(
     tmpackets::Vector{TelemetryPacket{T}},
-    database::TelemetryDatabase,
-    telemetries::Vector{Pair{Symbol, Symbol}}
+    telemetries::Vector{Pair{Symbol, Symbol}};
+    database::TelemetryDatabase = get_default_database()
 ) where T <: TelemetrySource
     # Assembles the columns given the user selections.
     cols = [

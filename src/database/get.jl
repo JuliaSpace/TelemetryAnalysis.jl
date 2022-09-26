@@ -7,7 +7,20 @@
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-export get_variable_description
+export get_default_database, get_variable_description
+
+"""
+    get_default_database()
+
+Get the default database. This function throws an error if it is not defined
+yet.
+"""
+function get_default_database()
+    !isassigned(_DEFAULT_TELEMETRY_DATABASE) &&
+        error("The default telemetry database has not been assigned.")
+
+    return _DEFAULT_TELEMETRY_DATABASE[]
+end
 
 """
     get_variable_description(label::Symbol, database::TelemetryDatabase)

@@ -7,7 +7,34 @@
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+export get_default_telemetry_packets, get_default_telemetry_source
 export get_telemetry, init_telemetry_source
+
+"""
+    get_default_telemetry_packets()
+
+Get the default telemetry packets. This function throws an error if they are not
+defined yet.
+"""
+function get_default_telemetry_packets()
+    !isassigned(_DEFAULT_TELEMETRY_PACKETS) &&
+        error("The default telemetry packets have not been assigned.")
+
+    return _DEFAULT_TELEMETRY_PACKETS[]
+end
+
+"""
+    get_default_telemetry_source()
+
+Get the default telemetry source. This function throws an error if it is not
+defined yet.
+"""
+function get_default_telemetry_source()
+    !isassigned(_DEFAULT_TELEMETRY_SOURCE) &&
+        error("The default telemetry source has not been assigned.")
+
+    return _DEFAULT_TELEMETRY_SOURCE[]
+end
 
 """
     get_telemetry(source::T, start_time::DateTime, end_time::DateTime)
@@ -81,20 +108,14 @@ function get_telemetry(source::T) where T <: TelemetrySource
 end
 
 function get_telemetry(start_time::DateTime, end_time::DateTime)
-    !isassigned(_DEFAULT_TELEMETRY_SOURCE) &&
-        error("The default telemetry source has not been assigned.")
-
-    return get_telemetry(_DEFAULT_TELEMETRY_SOURCE[], start_time, end_time)
+    return get_telemetry(get_default_telemetry_source(), start_time, end_time)
 end
 
 function get_telemetry(start_time::DateTime, interval::Unitful.Quantity)
-    !isassigned(_DEFAULT_TELEMETRY_SOURCE) &&
-        error("The default telemetry source has not been assigned.")
-
-    return get_telemetry(_DEFAULT_TELEMETRY_SOURCE[], start_time, interval)
+    return get_telemetry(get_default_telemetry_source(), start_time, interval)
 end
 
-get_telemetry() = get_telemetry(_DEFAULT_TELEMETRY_SOURCE[])
+get_telemetry() = get_telemetry(get_default_telemetry_source())
 
 """
     set_default_telemetry_packet(tmpacket::Vector{TelemetryPacket})
