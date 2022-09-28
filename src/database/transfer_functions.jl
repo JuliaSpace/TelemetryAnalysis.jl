@@ -7,7 +7,7 @@
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-export tf_uint8, tf_uint16, tf_uint32, tf_uint64
+export tf_uint8, tf_uint16, tf_uint32, tf_uint64, tf_nothing
 
 """
     tf_uint8(raw::AbstractVector{UInt8})
@@ -54,4 +54,14 @@ function tf_uint64(raw::AbstractVector{UInt8})
         raw[begin + 6],
         raw[begin + 7],
     ))
+end
+
+"""
+    tf_nothing(raw::AbstractVector{UInt8})
+
+Dummy function that returns `nothing` and should be used for those variables
+that does not have a transfer function.
+"""
+function tf_nothing(raw::AbstractVector{UInt8})
+    return nothing
 end
