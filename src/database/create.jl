@@ -163,6 +163,24 @@ function add_variable!(
     )
 end
 
+function add_variable!(
+    database::TelemetryDatabase, tvd::TelemetryVariableDescription
+)
+    add_variable!(
+        database,
+        tvd.label,
+        tvd.position,
+        tvd.size,
+        tvd.tf,
+        alias = tvd.alias,
+        default_view = tvd.default_view,
+        dependencies = tvd.dependencies,
+        description = tvd.description,
+        endianess = tvd.endianess
+    )
+    return nothing
+end
+
 #                                   Private
 # ==============================================================================
 
