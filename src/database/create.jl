@@ -134,17 +134,17 @@ function add_variable!(
         description = "Variable $label"
     end
 
-    database.variables[label] = TelemetryVariableDescription(;
-        alias        = alias,
-        default_view = default_view,
-        dependencies = dependencies,
-        description  = description,
-        endianess    = endianess,
-        label        = label,
-        position     = position,
-        size         = size,
-        btf          = btf,
-        tf           = tf,
+    database.variables[label] = TelemetryVariableDescription(
+        alias,
+        default_view,
+        dependencies,
+        description,
+        endianess,
+        label,
+        position,
+        size,
+        btf,
+        tf
     )
     return nothing
 end
