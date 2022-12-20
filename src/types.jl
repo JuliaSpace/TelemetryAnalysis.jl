@@ -70,8 +70,8 @@ Describe a variable in the telemetry database.
     label::Symbol
     position::Int
     size::Int
-    btf::Function = _default_bit_transfer_function
     tf::Function
+    btf::Function
 end
 
 """

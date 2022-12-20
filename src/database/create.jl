@@ -47,7 +47,7 @@ function create_telemetry_database(
 end
 
 """
-    add_variable!(database::TelemetryDatabase, label::Symbol, [position::Int, size::Int,] tf::Function; kwargs...)
+    add_variable!(database::TelemetryDatabase, label::Symbol, [position::Int, size::Int,] tf::Function, btf::Function; kwargs...)
 
 Add a variable to the `database`.
 
@@ -59,6 +59,8 @@ Add a variable to the `database`.
 - `size::Int`: Size of the variable.
 - `tf::Function`: Variable transfer function. For more information, see section
     `Transfer function`.
+- `btf::Function`: The bit transfer function for the variable.
+    (**Default** = `_default_bit_transfer_function`)
 
 !!! note
     The `position` and `size` can be omitted if the variable is obtained only by
@@ -70,8 +72,6 @@ Add a variable to the `database`.
 - `alias::Union{Nothing, Symbol}`: An alias of the variable. In this case, the
     function [`get_variable_description`](@ref) will also consider this alias
     when searching. (**Default** = `nothing`)
-- `btf::Function`: The bit transfer function for the variable.
-    (**Default** = `_default_bit_transfer_function`)
 - `default_view::Symbol`: Select the default view for this variable during
     processing. For the list of available options, see
     [`process_telemetries`](@ref). (**Default** = `:processed`)
@@ -120,9 +120,9 @@ function add_variable!(
     label::Symbol,
     position::Integer,
     size::Integer,
-    tf::Function;
+    tf::Function,
+    btf::Function = _default_bit_transfer_function;
     alias::Union{Nothing, Symbol} = nothing,
-    btf::Function = _default_bit_transfer_function,
     default_view::Symbol = :processed,
     dependencies::Union{Nothing, Vector{Symbol}} = nothing,
     description::String = "",
@@ -143,8 +143,8 @@ function add_variable!(
         label,
         position,
         size,
-        btf,
-        tf
+        tf,
+        btf
     )
     return nothing
 end
@@ -192,9 +192,9 @@ function add_variable!(
         tvd.label,
         tvd.position,
         tvd.size,
-        tvd.tf;
+        tvd.tf,
+        tvd.btf;
         alias = tvd.alias,
-        btf = tvd.btf,
         default_view = tvd.default_view,
         dependencies = tvd.dependencies,
         description = tvd.description,
