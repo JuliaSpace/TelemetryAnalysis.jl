@@ -55,6 +55,8 @@ Describe a variable in the telemetry database.
 - `label::Symbol`: The variable label.
 - `position::Int`: The position of the variable in the unpacked telemetry frame.
 - `size::Int`: The number of bytes of the variable.
+- `btf::Function`: The bit transfer function to preprocess the raw telemetry
+  frame.
 - `tf::Function`: The transfer function to obtain the processed value.
 """
 @kwdef struct TelemetryVariableDescription
@@ -66,6 +68,7 @@ Describe a variable in the telemetry database.
     label::Symbol
     position::Int
     size::Int
+    btf::Function
     tf::Function
 end
 

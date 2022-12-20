@@ -70,6 +70,8 @@ Add a variable to the `database`.
 - `alias::Union{Nothing, Symbol}`: An alias of the variable. In this case, the
     function [`get_variable_description`](@ref) will also consider this alias
     when searching. (**Default** = `nothing`)
+- `btf::Function`: The bit transfer function for the variable.
+    (**Default** = `_default_bit_transfer_function`)
 - `default_view::Symbol`: Select the default view for this variable during
     processing. For the list of available options, see
     [`process_telemetries`](@ref). (**Default** = `:processed`)
@@ -81,21 +83,37 @@ Add a variable to the `database`.
 - `endianess::Symbol`: `:littleendian` or `:bigendian` to indicate the endianess
     of the variable. (**Default** = `:littleendian`)
 
+# Bit transfer function
+
+The bit transfer function must have the following signature:
+
+```julia
+function btf(raw_frame::Vector{UInt8})::AbstractVector{UInt8}
+```
+
+Its purpose is to obtain the `raw_frame` from the telemetry and process to the
+bits related to the current telemetry variable. The `raw_frame` is a set of
+bytes obtained from the variable parameters `position`, `size`, and `endianess`.
+
 # Transfer function
 
 The variable transfer function can have one of the following signatures:
 
-    function tf(unpacked_frame::Vector{UInt8})
+```julia
+function tf(raw::Vector{UInt8})
+```
 
-Return the processed value of the variable given the `unpacked_frame`, obtained
-from the function `unpack_telemetry` of the database.
+Return the processed value of the variable given the `raw` information, obtained
+by the bit transfer function.
 
-    function tf(raw::Vector{UInt8}, processed_variables::Dict{Symbol, Any})
+```julia
+function tf(raw::Vector{UInt8}, processed_variables::Dict{Symbol, Any})
+```
 
-Return the processed value of the variable given the `unpacked_frame`, obtained
-from the function `unpack_telemetry` of the database, and the set of processed
-variables in `processed_variables`. This signature must be use if the transfer
-function depends on others variables.
+Return the processed value of the variable given the `raw` information, obtained
+from the function bit transfer function, and the set of processed variables in
+`processed_variables`. This signature must be use if the transfer function
+depends on others variables.
 """
 function add_variable!(
     database::TelemetryDatabase,
@@ -104,6 +122,7 @@ function add_variable!(
     size::Integer,
     tf::Function;
     alias::Union{Nothing, Symbol} = nothing,
+    btf::Function = _default_bit_transfer_function,
     default_view::Symbol = :processed,
     dependencies::Union{Nothing, Vector{Symbol}} = nothing,
     description::String = "",
@@ -124,6 +143,7 @@ function add_variable!(
         label        = label,
         position     = position,
         size         = size,
+        btf          = btf,
         tf           = tf,
     )
     return nothing
@@ -164,15 +184,17 @@ function add_variable!(
 end
 
 function add_variable!(
-    database::TelemetryDatabase, tvd::TelemetryVariableDescription
+    database::TelemetryDatabase,
+    tvd::TelemetryVariableDescription
 )
     add_variable!(
         database,
         tvd.label,
         tvd.position,
         tvd.size,
-        tvd.tf,
+        tvd.tf;
         alias = tvd.alias,
+        btf = tvd.btf,
         default_view = tvd.default_view,
         dependencies = tvd.dependencies,
         description = tvd.description,
@@ -183,6 +205,8 @@ end
 
 #                                   Private
 # ==============================================================================
+
+_default_bit_transfer_function(raw_frame::AbstractVector{UInt8}) = raw_frame
 
 function _default_unpack_telemetry(
     tmpacket::TelemetryPacket{T}

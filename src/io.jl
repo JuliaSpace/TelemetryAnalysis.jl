@@ -113,12 +113,13 @@ function show(io::IO, ::MIME"text/plain", var::TelemetryVariableDescription)
     endianess_str = var.endianess == :bigendian ? "Big endian" : "Little endian"
 
     println(io, "TelemetryVariableDescription:")
-    println(io, cy * "                Label" * cr * " : " * string(var.label) * alias_str)
-    println(io, cy * "          Description" * cr * " : " * var.description)
-    println(io, cy * "            Endianess" * cr * " : " * endianess_str)
-    println(io, cy * "             Position" * cr * " : " * string(var.position))
-    println(io, cy * "                 Size" * cr * " : " * string(var.size) * " bytes")
-    print(  io, cy * "    Transfer function" * cr * " : " * cc * string(var.tf))
+    println(io, cy * "                    Label" * cr * " : " * string(var.label) * alias_str)
+    println(io, cy * "              Description" * cr * " : " * var.description)
+    println(io, cy * "                Endianess" * cr * " : " * endianess_str)
+    println(io, cy * "                 Position" * cr * " : " * string(var.position))
+    println(io, cy * "                     Size" * cr * " : " * string(var.size) * " bytes")
+    print(  io, cy * "    Bit Transfer function" * cr * " : " * cc * string(var.btf))
+    print(  io, cy * "        Transfer function" * cr * " : " * cc * string(var.tf))
 
     return nothing
 end

@@ -155,10 +155,17 @@ function process_telemetries(
         for (variable_label, type) in telemetries
             variable_desc = get_variable_description(variable_label, database)
 
-            raw_value = _get_variable_raw_telemetry(
+            # Obtain the raw telemetry frame using the following information:
+            #   - Position;
+            #   - Size; and
+            #   - Endianess.
+            raw_frame = _get_variable_raw_telemetry_frame(
                 unpacked_frame,
                 variable_desc
             )
+
+            # Convert the raw telemetry frame to the raw value.
+            raw_value = variable_desc.btf(raw_frame)
 
             if type == :raw
                 output_dict[Symbol(string(variable_label) * "_raw")] = raw_value
@@ -179,10 +186,18 @@ function process_telemetries(
                         if !haskey(processed_variables, var)
                             dep_var_desc = get_variable_description(var, database)
 
-                            dep_raw_value = _get_variable_raw_telemetry(
+                            # Obtain the raw telemetry frame using the following
+                            # information:
+                            #   - Position;
+                            #   - Size; and
+                            #   - Endianess.
+                            dep_raw_frame = _get_variable_raw_telemetry_frame(
                                 unpacked_frame,
-                                dep_var_desc
+                                variable_desc
                             )
+
+                            # Convert the raw telemetry frame to the raw value.
+                            dep_raw_value = variable_desc.btf(raw_frame)
 
                             dep_processed_value = _process_telemetry_variable(
                                 processed_variables,
@@ -211,7 +226,7 @@ function process_telemetries(
 
     @info "$(nrow(output)) packets out of $(length(tmpackets)) were processed correctly."
 
-    # Sort the dataframe using the timestamp and convert the columns to improve
+    # Sort the DataFrame using the timestamp and convert the columns to improve
     # analysis performance.
     sort!(output, :timestamp)
 
@@ -221,7 +236,7 @@ end
 #                                   Private
 # ==============================================================================
 
-function _get_variable_raw_telemetry(
+function _get_variable_raw_telemetry_frame(
     unpacked_frame::AbstractVector{UInt8},
     variable_desc::TelemetryVariableDescription
 )

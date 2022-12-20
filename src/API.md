@@ -103,6 +103,8 @@ add_variable!(database::TelemetryDatabase, label::Symbol, [position::Int, size::
 - `label::Symbol`: Variable label in the database.
 - `position::Int`: Variable position in the telemetry database.
 - `size::Int`: Size of the variable.
+- `btf::Function`: Bit transfer function. For more information, see section
+  [`Bit transfer function`](@ref).
 - `tf::Function`: Variable transfer function. For more information, see section
     [`Transfer function`](@ref).
 
@@ -127,22 +129,34 @@ This function allows the following keywords:
 - `endianess::Symbol`: `:littleendian` or `:bigendian` to indicate the endianess
     of the variable. (**Default** = `:littleendian`)
 
+### Bit transfer function
+
+The bit transfer function must have the following signature:
+
+```julia
+function btf(raw_frame::Vector{UInt8})::AbstractVector{UInt8}
+```
+
+Its purpose is to obtain the `raw_frame` from the telemetry and process to the
+bits related to the current telemetry variable. The `raw_frame` is a set of
+bytes obtained from the variable parameters `position`, `size`, and `endianess`.
+
 ### Transfer function
 
 The variable transfer function can have one of the following signatures:
 
 ```julia
-function tf(unpacked_frame::Vector{UInt8})
+function tf(raw::Vector{UInt8})
 ```
 
-Return the processed value of the variable given the `unpacked_frame`, obtained
-from the function `unpack_telemetry` of the database.
+Return the processed value of the variable given the `raw` information, obtained
+by the bit transfer function.
 
 ```julia
 function tf(raw::Vector{UInt8}, processed_variables::Dict{Symbol, Any})
 ```
 
-Return the processed value of the variable given the `unpacked_frame`, obtained
-from the function `unpack_telemetry` of the database, and the set of processed
-variables in `processed_variables`. This signature must be use if the transfer
-function depends on others variables.
+Return the processed value of the variable given the `raw` information, obtained
+from the function bit transfer function, and the set of processed variables in
+`processed_variables`. This signature must be use if the transfer function
+depends on others variables.
