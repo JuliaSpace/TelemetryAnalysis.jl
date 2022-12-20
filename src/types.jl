@@ -94,4 +94,3 @@ Defines a telemetry database.
     variables::Dict{Symbol, TelemetryVariableDescription} =
         Dict{Symbol, TelemetryVariableDescription}()
 end
-

@@ -55,7 +55,7 @@ must be added, the column will be named `<variable_name>_raw`.
 """
 function process_telemetries(;
     database::TelemetryDatabase = get_default_database()
-) where T <: TelemetrySource
+)
     return process_telemetries(
         get_default_telemetry_packets();
         database
@@ -76,7 +76,7 @@ end
 function process_telemetries(
     telemetries::AbstractVector;
     database::TelemetryDatabase = get_default_database()
-) where T <: TelemetrySource
+)
     return process_telemetries(
         get_default_telemetry_packets(),
         telemetries;
@@ -108,7 +108,7 @@ end
 function process_telemetries(
     telemetries::Vector{Pair{Symbol, Symbol}};
     database::TelemetryDatabase = get_default_database()
-) where T <: TelemetrySource
+)
     return process_telemetries(
         get_default_telemetry_packets(),
         telemetries;
