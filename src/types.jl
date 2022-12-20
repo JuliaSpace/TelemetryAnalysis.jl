@@ -9,6 +9,8 @@
 
 export TelemetryDatabase, TelemetrySource, TelemetryPacket
 
+_default_bit_transfer_function(raw_frame::AbstractVector{UInt8}) = raw_frame
+
 """
     abstract type TelemetrySource end
 
@@ -68,7 +70,7 @@ Describe a variable in the telemetry database.
     label::Symbol
     position::Int
     size::Int
-    btf::Function
+    btf::Function = _default_bit_transfer_function
     tf::Function
 end
 

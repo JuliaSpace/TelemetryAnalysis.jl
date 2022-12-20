@@ -206,8 +206,6 @@ end
 #                                   Private
 # ==============================================================================
 
-_default_bit_transfer_function(raw_frame::AbstractVector{UInt8}) = raw_frame
-
 function _default_unpack_telemetry(
     tmpacket::TelemetryPacket{T}
 ) where T<:TelemetrySource
