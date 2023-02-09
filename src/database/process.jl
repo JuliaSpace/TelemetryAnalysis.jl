@@ -193,11 +193,11 @@ function process_telemetries(
                             #   - Endianess.
                             dep_raw_frame = _get_variable_raw_telemetry_frame(
                                 unpacked_frame,
-                                variable_desc
+                                dep_var_desc
                             )
 
                             # Convert the raw telemetry frame to the raw value.
-                            dep_raw_value = dep_var_desc.btf(raw_frame)
+                            dep_raw_value = dep_var_desc.btf(dep_raw_frame)
 
                             dep_processed_value = _process_telemetry_variable(
                                 processed_variables,
