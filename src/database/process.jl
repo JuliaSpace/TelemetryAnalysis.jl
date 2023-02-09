@@ -197,7 +197,7 @@ function process_telemetries(
                             )
 
                             # Convert the raw telemetry frame to the raw value.
-                            dep_raw_value = variable_desc.btf(raw_frame)
+                            dep_raw_value = dep_var_desc.btf(raw_frame)
 
                             dep_processed_value = _process_telemetry_variable(
                                 processed_variables,
