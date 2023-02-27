@@ -138,7 +138,10 @@ function process_telemetries(
         error("The selected database does not support telemetries from $(T).")
     end
 
-    for tmpacket in tmpackets
+    # Re-entrant lock for operations that must not be executed concurrently.
+    thread_lock = ReentrantLock()
+
+    Threads.@threads for tmpacket in tmpackets
         # Unpack the telemetry frame.
         unpacked_frame = database.unpack_telemetry(tmpacket)
         unpacked_frame === nothing && continue
@@ -185,7 +188,9 @@ function process_telemetries(
                 # topological sort to obtain the process order.
                 if !haskey(database._variable_dependencies, variable_label)
                     deps = _dependency_topological_sort(variable_label, database)
+                    lock(thread_lock)
                     database._variable_dependencies[variable_label] = deps
+                    unlock(thread_lock)
                 else
                     deps = database._variable_dependencies[variable_label]
                 end
@@ -230,7 +235,9 @@ function process_telemetries(
             end
         end
 
+        lock(thread_lock)
         push!(output, output_dict)
+        unlock(thread_lock)
     end
 
     @info "$(nrow(output)) packets out of $(length(tmpackets)) were processed correctly."

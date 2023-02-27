@@ -6,8 +6,8 @@ import REPL
 using CodecZlib
 using DataFrames
 using PrettyTables
-using Reexport
 using REPL.TerminalMenus
+using Reexport
 using Serialization
 using Unitful
 
