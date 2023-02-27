@@ -95,4 +95,12 @@ Defines a telemetry database.
     unpack_telemetry::F2
     variables::Dict{Symbol, TelemetryVariableDescription} =
         Dict{Symbol, TelemetryVariableDescription}()
+
+    # Private fields
+    # ==========================================================================
+
+    # This field caches the dependency vector of each variable sorted in
+    # topological order. It is build when a variable is processed.
+    _variable_dependencies::Dict{Symbol, Vector{Symbol}} =
+        Dict{Symbol, Vector{Symbol}}()
 end

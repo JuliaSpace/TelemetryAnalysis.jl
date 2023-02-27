@@ -179,7 +179,16 @@ function process_telemetries(
 
                 # We need to process all the dependencies first before computing
                 # the processed value.
-                deps = _dependency_topological_sort(variable_label, database)
+                #
+                # First, we check if we already computed the dependencies for
+                # this variable in the database. If not, we perform a
+                # topological sort to obtain the process order.
+                if !haskey(database._variable_dependencies, variable_label)
+                    deps = _dependency_topological_sort(variable_label, database)
+                    database._variable_dependencies[variable_label] = deps
+                else
+                    deps = database._variable_dependencies[variable_label]
+                end
 
                 if !isnothing(deps)
                     for var in deps
