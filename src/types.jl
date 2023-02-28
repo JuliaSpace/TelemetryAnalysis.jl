@@ -7,7 +7,8 @@
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-export TelemetryDatabase, TelemetrySource, TelemetryPacket
+export TelemetryDatabase, TelemetryVariableDescription, TelemetrySource
+export TelemetryPacket
 
 _default_bit_transfer_function(raw_frame::AbstractVector{UInt8}) = raw_frame
 
