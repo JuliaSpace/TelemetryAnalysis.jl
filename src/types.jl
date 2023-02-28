@@ -102,6 +102,6 @@ Defines a telemetry database.
 
     # This field caches the dependency vector of each variable sorted in
     # topological order. It is build when a variable is processed.
-    _variable_dependencies::Dict{Symbol, Vector{Symbol}} =
-        Dict{Symbol, Vector{Symbol}}()
+    _variable_dependencies::Dict{Symbol, Union{Nothing, Vector{Symbol}}} =
+        Dict{Symbol, Union{Nothing, Vector{Symbol}}}()
 end
