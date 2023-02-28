@@ -9,8 +9,9 @@
 
 export TelemetryDatabase, TelemetryVariableDescription, TelemetrySource
 export TelemetryPacket
+export default_bit_transfer_function
 
-_default_bit_transfer_function(raw_frame::AbstractVector{UInt8}) = raw_frame
+default_bit_transfer_function(raw_frame::AbstractVector{UInt8}) = raw_frame
 
 """
     abstract type TelemetrySource end

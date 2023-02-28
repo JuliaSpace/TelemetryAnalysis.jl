@@ -60,7 +60,7 @@ Add a variable to the `database`.
 - `tf::Function`: Variable transfer function. For more information, see section
     `Transfer function`.
 - `btf::Function`: The bit transfer function for the variable.
-    (**Default** = `_default_bit_transfer_function`)
+    (**Default** = `default_bit_transfer_function`)
 
 !!! note
     The `position` and `size` can be omitted if the variable is obtained only by
@@ -121,7 +121,7 @@ function add_variable!(
     position::Integer,
     size::Integer,
     tf::Function,
-    btf::Function = _default_bit_transfer_function;
+    btf::Function = default_bit_transfer_function;
     alias::Union{Nothing, Symbol} = nothing,
     default_view::Symbol = :processed,
     dependencies::Union{Nothing, Vector{Symbol}} = nothing,
