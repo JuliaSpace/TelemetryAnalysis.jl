@@ -118,7 +118,7 @@ function show(io::IO, ::MIME"text/plain", var::TelemetryVariableDescription)
     println(io, cy * "                Endianess" * cr * " : " * endianess_str)
     println(io, cy * "                 Position" * cr * " : " * string(var.position))
     println(io, cy * "                     Size" * cr * " : " * string(var.size) * " bytes")
-    print(  io, cy * "    Bit Transfer function" * cr * " : " * cc * string(var.btf))
+    println(io, cy * "    Bit Transfer function" * cr * " : " * cc * string(var.btf))
     print(  io, cy * "        Transfer function" * cr * " : " * cc * string(var.tf))
 
     return nothing
