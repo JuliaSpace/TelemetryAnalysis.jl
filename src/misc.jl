@@ -1,20 +1,20 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
 # Description
-# ==============================================================================
+# ==========================================================================================
 #
 #   Miscellaneous functions.
 #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-export analyze_raw_data, checkbit, raw_to_hex, raw_to_binary
+export analyze_byte_array, byte_array_to_hex, byte_array_to_binary, checkbit
 
-function analyze_raw_data(
-    raw::AbstractVector{UInt8};
+function analyze_byte_array(
+    byte_array::AbstractVector{UInt8};
     order::Symbol = :descending,
     binarysep::Bool = true
 )
-    num_bytes = length(raw)
+    num_bytes = length(byte_array)
 
     header = ["#$i" for i in 1:num_bytes]
 
@@ -25,7 +25,7 @@ function analyze_raw_data(
     data = Matrix{String}(undef, 3, num_bytes)
 
     for i = 1:num_bytes
-        byte = raw[begin + i - 1]
+        byte = byte_array[begin + i - 1]
 
         hex_str = "0x" * (string(byte, base = 16, pad = 2) |> uppercase)
         dec_str = string(byte)
@@ -62,42 +62,42 @@ function analyze_raw_data(
 end
 
 """
-    checkbit(raw::T, bit::Integer) where T <: Integer
+    byte_array_to_binary(byte_array::AbstractVector{UInt8})
+
+Convert the `byte_array` to a binary string.
+"""
+function byte_array_to_binary(byte_array::AbstractVector{UInt8})
+    hex_buf = IOBuffer(sizehint = 2length(byte_array) + 2)
+    write(hex_buf, "0b")
+
+    for i in reverse(eachindex(byte_array))
+        write(hex_buf, string(byte_array[i], base = 2, pad = 8) |> uppercase)
+    end
+
+    return String(take!(hex_buf))
+end
+
+"""
+    byte_array_to_hex(byte_array::AbstractVector{UInt8}) -> String
+
+Convert the `byte_array` to an hexadecimal string.
+"""
+function byte_array_to_hex(byte_array::AbstractVector{UInt8})
+    hex_buf = IOBuffer(sizehint = 2length(byte_array) + 2)
+    write(hex_buf, "0x")
+
+    for i in reverse(eachindex(byte_array))
+        write(hex_buf, string(byte_array[i], base = 16, pad = 2) |> uppercase)
+    end
+
+    return String(take!(hex_buf))
+end
+
+"""
+    checkbit(raw::T, bit::Integer) where T <: Integer -> Bool
 
 Check if the `bit` in `raw` is set. The least significant bit is 1.
 """
-function checkbit(raw::T, bit::Integer) where T <: Integer
+function checkbit(raw::T, bit::Integer) where T<:Integer
     return (raw & (T(1) << (bit - 1))) > 0
-end
-
-"""
-    raw_to_hex(raw::AbstractVector{UInt8})
-
-Convert the `raw` telemetry to an hexadecimal string.
-"""
-function raw_to_hex(raw::AbstractVector{UInt8})
-    hex_buf = IOBuffer(sizehint = 2length(raw) + 2)
-    write(hex_buf, "0x")
-
-    for i in reverse(eachindex(raw))
-        write(hex_buf, string(raw[i], base = 16, pad = 2) |> uppercase)
-    end
-
-    return String(take!(hex_buf))
-end
-
-"""
-    raw_to_binary(raw::AbstractVector{UInt8})
-
-Convert the `raw` telemetry to a binary string.
-"""
-function raw_to_binary(raw::AbstractVector{UInt8})
-    hex_buf = IOBuffer(sizehint = 2length(raw) + 2)
-    write(hex_buf, "0b")
-
-    for i in reverse(eachindex(raw))
-        write(hex_buf, string(raw[i], base = 2, pad = 8) |> uppercase)
-    end
-
-    return String(take!(hex_buf))
 end

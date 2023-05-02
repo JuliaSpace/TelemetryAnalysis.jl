@@ -1,16 +1,16 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
 # Description
-# ==============================================================================
+# ==========================================================================================
 #
 #   Functions to save the telemetry obtained from the sources.
 #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 export load_telemetry, save_telemetry
 
 """
-    load_telemetry(filename::String)
+    load_telemetry(filename::String) -> Vector{TelemetryPacket}
 
 Load the telemetries in the file `filename`.
 """
@@ -43,15 +43,14 @@ function load_telemetry(filename::String)
 end
 
 """
-    save_telemetry(tms::Vector{TelemetryPacket{T}}, prefix::String = string(T)) where T <: TelemetrySource
+    save_telemetry(tms::Vector{TelemetryPacket{T}}, prefix::String = string(T)) where T<:TelemetrySource -> Nothing
 
-Save the telemetries in the vector `tms` to a file. The filename is built using
-`prefix` together with the timestamp of the telemetries:
+Save the telemetries in the vector `tms` to a file. The filename is built using `prefix`
+together with the timestamp of the telemetries:
 
     <prefix>_<timestamp of the first telemetry>_<timestamp of the last telemetry>
 
-The format of timestamp if `yyyy-mm-ddTHH-MM-SS`. If `prefix` is omitted, "T" is
-used.
+The format of timestamp if `yyyy-mm-ddTHH-MM-SS`. If `prefix` is omitted, "T" is used.
 """
 function save_telemetry(
     tms::Vector{TelemetryPacket{T}},

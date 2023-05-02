@@ -1,20 +1,19 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
 # Description
-# ==============================================================================
+# ==========================================================================================
 #
 #   Functions to get variables from the database.
 #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 export get_default_database, get_variable_description, search_variables
 export @searchvar
 
 """
-    get_default_database()
+    get_default_database() -> Any
 
-Get the default database. This function throws an error if it is not defined
-yet.
+Get the default database. This function throws an error if it is not defined yet.
 """
 function get_default_database()
     !isassigned(_DEFAULT_TELEMETRY_DATABASE) &&
@@ -24,11 +23,10 @@ function get_default_database()
 end
 
 """
-    get_variable_description(label::Symbol, database::TelemetryDatabase)
+    get_variable_description(label::Symbol, database::TelemetryDatabase) -> TelemetryVariableDescription
 
-Get the description of a variable with `label` in `database`. Notice that
-`label` can also be the variable alias. If the variable is not found, the
-function returns `nothing`.
+Get the description of a variable with `label` in `database`. Notice that `label` can also
+be the variable alias. If the variable is not found, the function returns `nothing`.
 """
 function get_variable_description(label::Symbol, database::TelemetryDatabase)
     if haskey(database.variables, label)
@@ -45,10 +43,10 @@ function get_variable_description(label::Symbol, database::TelemetryDatabase)
 end
 
 """
-    search_variables(str::AbstractString[, database::TelemetryDatabase])
+    search_variables(str::AbstractString[, database::TelemetryDatabase]) -> Nothing
 
-Search for variables registered in `database` in which their alias or
-description contains `str`.
+Search for variables registered in `database` in which their alias or description contains
+`str`.
 
 If `database` is not provided, the default one is used.
 """
@@ -104,8 +102,8 @@ end
 """
     @searchvar(pattern)
 
-Search variables in the default database in which their alias or description
-contains `pattern`. `pattern` can be either a `Symbol` or an `AbstractString`.
+Search variables in the default database in which their alias or description contains
+`pattern`. `pattern` can be either a `Symbol` or an `AbstractString`.
 """
 macro searchvar(pattern)
     if (pattern isa Symbol)

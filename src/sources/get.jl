@@ -1,20 +1,20 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
 # Description
-# ==============================================================================
+# ==========================================================================================
 #
 #   Functions to fetch the telemetry from the sources.
 #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 export get_default_telemetry_packets, get_default_telemetry_source
 export get_telemetry, init_telemetry_source
 
 """
-    get_default_telemetry_packets()
+    get_default_telemetry_packets() -> Any
 
-Get the default telemetry packets. This function throws an error if they are not
-defined yet.
+Get the default telemetry packets. This function throws an error if they are not defined
+yet.
 """
 function get_default_telemetry_packets()
     !isassigned(_DEFAULT_TELEMETRY_PACKETS) &&
@@ -24,10 +24,9 @@ function get_default_telemetry_packets()
 end
 
 """
-    get_default_telemetry_source()
+    get_default_telemetry_source() -> Any
 
-Get the default telemetry source. This function throws an error if it is not
-defined yet.
+Get the default telemetry source. This function throws an error if it is not defined yet.
 """
 function get_default_telemetry_source()
     !isassigned(_DEFAULT_TELEMETRY_SOURCE) &&
@@ -37,43 +36,41 @@ function get_default_telemetry_source()
 end
 
 """
-    get_telemetry(source::T, start_time::DateTime, end_time::DateTime)
+    get_telemetry(source::T, start_time::DateTime, end_time::DateTime) where T<:TelemetrySource -> Vector{TelemetryPackets{T}}
 
 Get the telemetry data using the `source` between `start_time` and `end_time`.
 
-    get_telemetry(::Type{T}, start_time::DateTime, interval)
+    get_telemetry(::Type{T}, start_time::DateTime, interval) where T<:TelemetrySource -> Vector{TelemetryPackets{T}}
 
-Get the telemetry data using the `source` from `start_time` up to `start_time +
-interval`. `interval` must be a number with a time unit. The following units are
-exported:
+Get the telemetry data using the `source` from `start_time` up to `start_time + interval`.
+`interval` must be a number with a time unit. The following units are exported:
 
 - `s` for seconds;
 - `m` for minutes;
 - `h` for hours; and
 - `d` for day.
 
-If `source` is omitted, the default telemetry source is used. For more
-information, see [`set_default_telemetry_source`](@ref).
+If `source` is omitted, the default telemetry source is used. For more information, see
+[`set_default_telemetry_source`](@ref).
 
 Some sources may also implement the simplified version of this function:
 
-    get_telemetry(::Type{T})
+    get_telemetry(::Type{T}) where T<:TelemetrySource -> Vector{TelemetryPackets{T}}
 
 where all the available telemetry will be fetched.
 
 !!! note
-    The telemetry obtained from this function is selected as the default
-    telemetry packet.
+    The telemetry obtained from this function is selected as the default telemetry packet.
 
 # Returns
 
-This function returns a `Vector{TelemetryPacket{T}}` with the telemetry packets.
+- `Vector{TelemetryPacket{T}}`: A vector with the telemetry packets.
 """
 function get_telemetry(
     source::T,
     start_time::DateTime,
     end_time::DateTime
-) where T <: TelemetrySource
+) where T<:TelemetrySource
     @info "Fetching the telemetry between $start_time and $end_time [Source type: $T]"
 
     t_0 = now()
@@ -103,7 +100,7 @@ function get_telemetry(
     return get_telemetry(source, start_time, end_time)
 end
 
-function get_telemetry(source::T) where T <: TelemetrySource
+function get_telemetry(source::T) where T<:TelemetrySource
     return _api_get_telemetry(source)::Vector{TelemetryPacket{T}}
 end
 
@@ -118,7 +115,7 @@ end
 get_telemetry() = get_telemetry(get_default_telemetry_source())
 
 """
-    set_default_telemetry_packet(tmpacket::Vector{TelemetryPacket})
+    set_default_telemetry_packet(tmpacket::Vector{TelemetryPacket}) -> Nothing
 
 Set the default telemetry packet to `tmpacket`.
 """

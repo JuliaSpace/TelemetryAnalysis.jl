@@ -10,11 +10,11 @@
 export get_user_option
 
 """
-    get_user_option(text::String, options::AbstractVector)
+    get_user_option(text::String, options::AbstractVector) -> Int
 
-Get the user option. `text` is the information shown to the user and `options`
-is a vector with the options. This function returns the selection index w.r.t.
-`options`, or -1 if the user did not select an option.
+Get the user option. `text` is the information shown to the user and `options` is a vector
+with the options. This function returns the selection index with respect to `options`, or -1
+if the user did not select an option.
 """
 function get_user_option(text::String, options::AbstractVector)
     hascolor = get(stdout, :color, false)
@@ -23,33 +23,30 @@ function get_user_option(text::String, options::AbstractVector)
     return request(cy * text * cr, RadioMenu(options, pagesize = 5))
 end
 
-#                                  Julia API
-# ==============================================================================
+#                                        Julia API
+# ==========================================================================================
+
 
 # TelemetryPacket
-# ==============================================================================
+# ------------------------------------------------------------------------------------------
 
 function show(io::IO, tmpacket::TelemetryPacket{T}) where T <: TelemetrySource
-    num_bytes = length(tmpacket.raw)
+    num_bytes = length(tmpacket.data)
     print(io, "TelemetryPacket {$T} (Timestamp = $(tmpacket.timestamp), $(num_bytes) bytes)")
     return nothing
 end
 
-function show(
-    io::IO,
-    ::MIME"text/plain",
-    tmpacket::TelemetryPacket{T}
-) where T<:TelemetrySource
+function show(io::IO, ::MIME"text/plain", tmpacket::TelemetryPacket{T}) where T<:TelemetrySource
     # Colors.
     hascolor = get(io, :color, false)
     cr = (hascolor ? string(crayon"reset")       : "")
     cy = (hascolor ? string(crayon"yellow bold") : "")
     cb = (hascolor ? string(crayon"blue bold")   : "")
 
-    num_bytes = length(tmpacket.raw)
+    num_bytes = length(tmpacket.data)
     println(io, "TelemetryPacket{$T}:")
     println(io, cy * "    Timestamp" * cr * " : " * string(tmpacket.timestamp))
-    print(  io, cy * "     Raw data" * cr * " : " * string(num_bytes) * " bytes")
+    print(  io, cy * "         Data" * cr * " : " * string(num_bytes) * " bytes")
     aux =       cy * "     Metadata" * cr * " : "
 
     if !isempty(tmpacket.metadata)
@@ -68,7 +65,7 @@ function show(
 end
 
 # TelemetryDatabase
-# ==============================================================================
+# ------------------------------------------------------------------------------------------
 
 function show(io::IO, db::TelemetryDatabase)
     num_variables = length(db.variables)
@@ -94,7 +91,7 @@ function show(io::IO, ::MIME"text/plain", db::TelemetryDatabase)
 end
 
 # TelemetryVariableDescription
-# ==============================================================================
+# ------------------------------------------------------------------------------------------
 
 function show(io::IO, var::TelemetryVariableDescription)
     print(io, "TelemetryVariableDescription: $(var.label)")
@@ -119,6 +116,7 @@ function show(io::IO, ::MIME"text/plain", var::TelemetryVariableDescription)
     println(io, cy * "                 Position" * cr * " : " * string(var.position))
     println(io, cy * "                     Size" * cr * " : " * string(var.size) * " bytes")
     println(io, cy * "    Bit Transfer function" * cr * " : " * cc * string(var.btf))
+    println(io, cy * "    Raw Transfer function" * cr * " : " * cc * string(var.rtf))
     print(  io, cy * "        Transfer function" * cr * " : " * cc * string(var.tf))
 
     return nothing

@@ -1,57 +1,55 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
 # Description
-# ==============================================================================
+# ==========================================================================================
 #
 #   Functions to process variables in the database.
 #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 export process_telemetries
 
 """
-    process_telemetries([tmpackets::Vector{TelemetryPacket{T}}]; database::TelemetryDatabase) where T <: TelemetrySource
+    process_telemetries([tmpackets::Vector{TelemetryPacket{T}}]; database::TelemetryDatabase) where T <: TelemetrySource -> DateFrame
 
-Process the telemetry packets `tmpackets` using the `database`, returning the
-processed values of **all** registered telemetries. If `tmpackets` are not
-passed, the default telemetry packets will be used.
+Process the telemetry packets `tmpackets` using the `database`, returning the processed
+values of **all** registered telemetries. If `tmpackets` are not passed, the default
+telemetry packets will be used.
 
-    process_telemetries([tmpackets::Vector{TelemetryPacket{T}},] telemetries::AbstractVector; database::TelemetryDatabase) where T <: TelemetrySource
+    process_telemetries([tmpackets::Vector{TelemetryPacket{T}},] telemetries::AbstractVector; database::TelemetryDatabase) where T <: TelemetrySource -> DataFrame
 
 Process the telemetry packets `tmpackets` using the `database`. The elements in
-`telemetries` can be a `Symbol` with the telemetry label or a
-`Pair{Symbol, Symbol}`. In the former, the default view will be used. In the
-latter, the variable view will be as specified by the second symbol in the pair.
-For more information, see the section below.
+`telemetries` can be a `Symbol` with the telemetry label or a `Pair{Symbol, Symbol}`. In the
+former, the default view will be used. In the latter, the variable view will be as specified
+by the second symbol in the pair.  For more information, see the section below.
 
 If `tmpackets` are not passed, the default telemetry packets will be used.
 
-    process_telemetries([tmpackets::Vector{TelemetryPacket{T}},] telemetries::Vector{Pair{Symbol, Symbol}}; database::TelemetryDatabase) where T <: TelemetrySource
+    process_telemetries([tmpackets::Vector{TelemetryPacket{T}},] telemetries::Vector{Pair{Symbol, Symbol}}; database::TelemetryDatabase) where T <: TelemetrySource -> DataFrame
 
-Process the telemetry packets `tmpackets` using the `database`. The output
-variables are indicated in `telemetries`. It must be a vector of pairs
-indicating the telemetry and how the value is written to the output. For
-example, `:C001 => :raw` adds the raw value of telemetry `C001`, whereas
-`:C001 => :processed` adds the processed value of the same variable.
+Process the telemetry packets `tmpackets` using the `database`. The output variables are
+indicated in `telemetries`. It must be a vector of pairs indicating the telemetry and how
+the value is written to the output. For example, `:C001 => :raw` adds the raw value of
+telemetry `C001`, whereas `:C001 => :processed` adds the processed value of the same
+variable.
 
 The acceptable values for the output format are:
 
-- `:processed`: Processed value obtained by the transfer function.
-- `:raw`: A `Vector{UInt8}` with the raw value.
-- `:raw_hex`: A string with the raw value represented in hexadecimal.
-- `:raw_bin`: A string with the raw value represented in binary.
+- `:byte_array`: `Vector{UInt8}` with the telemetry byte array.
+- `:byte_array_bin`: String with the raw value represented in binary.
+- `:byte_array_hex`: String with the raw value represented in hexadecimal.
+- `:processed`: Processed value obtained from the transfer function.
+- `:raw`: Telemetry raw value.
 
 If `tmpackets` are not passed, the default telemetry packets will be used.
 
 !!! info
-    If the keyword argument `database` is not passed, the default database is
-    used.
+    If the keyword argument `database` is not passed, the default database is used.
 
 # Return
 
-This function returns a `DataFrame` in which the columns are the selected
-values. The column names are the variable labels. If the raw value a variable
-must be added, the column will be named `<variable_name>_raw`.
+- `DataFrame`: A `DataFrame` in which the columns are the selected values. The column names
+    are the variable labels.
 """
 function process_telemetries(;
     database::TelemetryDatabase = get_default_database()
@@ -124,9 +122,13 @@ function process_telemetries(
     # Assembles the columns given the user selections.
     cols = [
         (
-            last(t) ∈ (:raw, :raw_hex, :raw_bin) ?
-                Symbol(string(first(t)) * "_raw") :
+            if last(t) ∈ (:byte_array, :byte_array_bin, :byte_array_hex)
+                Symbol(string(first(t)) * "_byte_array")
+            elseif last(t) === :raw
+                Symbol(string(first(t)) * "_raw")
+            else
                 first(t)
+            end
         ) => Any[]
         for t in telemetries
     ]
@@ -151,41 +153,44 @@ function process_telemetries(
 
         processed_variables = Dict{Symbol, Any}()
 
-        output_dict = Dict{Symbol, Any}(
-            :timestamp => timestamp
-        )
+        output_dict = Dict{Symbol, Any}(:timestamp => timestamp)
 
         for (variable_label, type) in telemetries
             variable_desc = get_variable_description(variable_label, database)
 
-            # Obtain the raw telemetry frame using the following information:
+            # Obtain the telemetry frame using the following information:
             #   - Position;
             #   - Size; and
             #   - Endianess.
-            raw_frame = _get_variable_raw_telemetry_frame(
-                unpacked_frame,
-                variable_desc
-            )
+            var_frame = _get_variable_telemetry_frame(unpacked_frame, variable_desc)
 
-            # Convert the raw telemetry frame to the raw value.
-            raw_value = variable_desc.btf(raw_frame)
+            # Convert the telemetry frame to the byte array.
+            byte_array = variable_desc.btf(var_frame)
 
-            if type == :raw
+            # Convert the byte array to the raw value.
+            raw_value = variable_desc.rtf(byte_array)
+
+            if type == :byte_array
+                output_dict[Symbol(string(variable_label) * "_byte_array")] = byte_array
+
+            elseif type == :byte_array_bin
+                output_dict[Symbol(string(variable_label) * "_byte_array")] =
+                    byte_array |> byte_array_to_binary
+
+            elseif type == :byte_array_hex
+                output_dict[Symbol(string(variable_label) * "_byte_array")] =
+                    byte_array |> byte_array_to_hex
+
+            elseif type == :raw
                 output_dict[Symbol(string(variable_label) * "_raw")] = raw_value
-            elseif type == :raw_hex
-                output_dict[Symbol(string(variable_label) * "_raw")] =
-                    raw_value |> raw_to_hex
-            elseif type == :raw_bin
-                output_dict[Symbol(string(variable_label) * "_raw")] =
-                    raw_value |> raw_to_binary
-            else
 
-                # We need to process all the dependencies first before computing
-                # the processed value.
+            else
+                # We need to process all the dependencies first before computing the
+                # processed value.
                 #
-                # First, we check if we already computed the dependencies for
-                # this variable in the database. If not, we perform a
-                # topological sort to obtain the process order.
+                # First, we check if we already computed the dependencies for this variable
+                # in the database. If not, we perform a topological sort to obtain the
+                # process order.
                 if !haskey(database._variable_dependencies, variable_label)
                     deps = _dependency_topological_sort(variable_label, database)
                     lock(thread_lock)
@@ -200,37 +205,48 @@ function process_telemetries(
                         if !haskey(processed_variables, var)
                             dep_var_desc = get_variable_description(var, database)
 
-                            # Obtain the raw telemetry frame using the following
-                            # information:
+                            # Obtain the telemetry frame using the following information:
                             #   - Position;
                             #   - Size; and
                             #   - Endianess.
-                            dep_raw_frame = _get_variable_raw_telemetry_frame(
+                            dep_var_frame = _get_variable_telemetry_frame(
                                 unpacked_frame,
                                 dep_var_desc
                             )
 
-                            # Convert the raw telemetry frame to the raw value.
-                            dep_raw_value = dep_var_desc.btf(dep_raw_frame)
+                            # Convert the telemetry frame to the byte array.
+                            dep_byte_array = dep_var_desc.btf(dep_var_frame)
 
+                            # Convert the byte array to the raw value.
+                            dep_raw_value = dep_var_desc.rtf(dep_byte_array)
+
+                            # Obtain the variable processed value.
                             dep_processed_value = _process_telemetry_variable(
                                 processed_variables,
                                 dep_raw_value,
                                 dep_var_desc
                             )
 
-                            processed_variables[var] = dep_processed_value
+                            # Add in the dictionary.
+                            processed_variables[var] = (;
+                                raw = dep_raw_value,
+                                processed = dep_processed_value
+                            )
                         end
                     end
                 end
 
+                # Obtain the variable processed value.
                 processed_value = _process_telemetry_variable(
                     processed_variables,
                     raw_value,
                     variable_desc
                 )
 
-                processed_variables[variable_label] = processed_value
+                processed_variables[variable_label] = (;
+                    raw = raw_value,
+                    processed = processed_value
+                )
                 output_dict[variable_label] = processed_value
             end
         end
@@ -242,43 +258,44 @@ function process_telemetries(
 
     @info "$(nrow(output)) packets out of $(length(tmpackets)) were processed correctly."
 
-    # Sort the DataFrame using the timestamp and convert the columns to improve
-    # analysis performance.
+    # Sort the DataFrame using the timestamp and convert the columns to improve analysis
+    # performance.
     sort!(output, :timestamp)
 
     return identity.(output)
 end
 
-#                                   Private
-# ==============================================================================
+############################################################################################
+#                                    Private Functions
+############################################################################################
 
-function _get_variable_raw_telemetry_frame(
+function _get_variable_telemetry_frame(
     unpacked_frame::AbstractVector{UInt8},
     variable_desc::TelemetryVariableDescription
 )
-    # Get the raw value from the telemetry frames.
+    # Get the telemetry frame for the variable.
     initial_byte = variable_desc.position
     end_byte     = initial_byte + (variable_desc.size - 1)
-    raw          = @view unpacked_frame[initial_byte:end_byte]
+    var_frame    = @view unpacked_frame[initial_byte:end_byte]
 
     if variable_desc.endianess == :bigendian
-        return reverse(raw)
+        return reverse(var_frame)
     else
-        return raw
+        return var_frame
     end
 end
 
 # Compute the processed value of a telemetry variable.
 function _process_telemetry_variable(
     processed_variables::Dict{Symbol, Any},
-    unpacked_frame::AbstractVector{UInt8},
+    raw::Any,
     variable_desc::TelemetryVariableDescription
 )
     # Check which method signature must be called to processed the value.
-    if applicable(variable_desc.tf, unpacked_frame, processed_variables)
-        processed_value = variable_desc.tf(unpacked_frame, processed_variables)
+    if applicable(variable_desc.tf, raw, processed_variables)
+        processed_value = variable_desc.tf(raw, processed_variables)
     else
-        processed_value = variable_desc.tf(unpacked_frame)
+        processed_value = variable_desc.tf(raw)
     end
 
     return processed_value
