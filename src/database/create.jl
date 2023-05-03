@@ -150,7 +150,7 @@ function add_variable!(
         alias,
         default_view,
         dependencies,
-        description,
+        rstrip(description, '\n'),
         endianess,
         label,
         position,
