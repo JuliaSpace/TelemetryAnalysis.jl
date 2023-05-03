@@ -168,7 +168,7 @@ function process_telemetries(
             byte_array = variable_desc.btf(var_frame)
 
             # Convert the byte array to the raw value.
-            raw_value = variable_desc.rtf(byte_array)
+            # raw_value = variable_desc.rtf(byte_array)
 
             if type == :byte_array
                 output_dict[Symbol(string(variable_label) * "_byte_array")] = byte_array
@@ -180,9 +180,6 @@ function process_telemetries(
             elseif type == :byte_array_hex
                 output_dict[Symbol(string(variable_label) * "_byte_array")] =
                     byte_array |> byte_array_to_hex
-
-            elseif type == :raw
-                output_dict[Symbol(string(variable_label) * "_raw")] = raw_value
 
             else
                 # We need to process all the dependencies first before computing the
@@ -218,7 +215,11 @@ function process_telemetries(
                             dep_byte_array = dep_var_desc.btf(dep_var_frame)
 
                             # Convert the byte array to the raw value.
-                            dep_raw_value = dep_var_desc.rtf(dep_byte_array)
+                            dep_raw_value =  _raw_telemetry_variable(
+                                processed_variables,
+                                dep_byte_array,
+                                dep_var_desc
+                            )
 
                             # Obtain the variable processed value.
                             dep_processed_value = _process_telemetry_variable(
@@ -236,18 +237,32 @@ function process_telemetries(
                     end
                 end
 
-                # Obtain the variable processed value.
-                processed_value = _process_telemetry_variable(
+                # Convert the byte array to the raw value.
+                raw_value =  _raw_telemetry_variable(
                     processed_variables,
-                    raw_value,
+                    byte_array,
                     variable_desc
                 )
 
-                processed_variables[variable_label] = (;
-                    raw = raw_value,
-                    processed = processed_value
-                )
-                output_dict[variable_label] = processed_value
+                if type == :raw
+                    output_dict[Symbol(string(variable_label) * "_raw")] = raw_value
+
+                else
+
+                    # Obtain the variable processed value.
+                    processed_value = _process_telemetry_variable(
+                        processed_variables,
+                        raw_value,
+                        variable_desc
+                    )
+
+                    processed_variables[variable_label] = (;
+                        raw = raw_value,
+                        processed = processed_value
+                    )
+
+                    output_dict[variable_label] = processed_value
+                end
             end
         end
 
@@ -299,4 +314,21 @@ function _process_telemetry_variable(
     end
 
     return processed_value
+end
+
+# Compute the raw value of a telemetry variable.
+function _raw_telemetry_variable(
+    processed_variables::Dict{Symbol, Any},
+    byte_array::Vector{UInt8},
+    variable_desc::TelemetryVariableDescription
+)
+    # Check which method signature must be called to obtain the telemetry variable raw
+    # value.
+    if applicable(variable_desc.rtf, byte_array, processed_variables)
+        raw_value = variable_desc.rtf(byte_array, processed_variables)
+    else
+        raw_value = variable_desc.rtf(byte_array)
+    end
+
+    return raw_value
 end
