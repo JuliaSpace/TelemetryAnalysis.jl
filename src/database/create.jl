@@ -9,10 +9,10 @@
 
 export create_telemetry_database
 export add_variable!
-export set_default_database!
+export set_default_telemetry_database!
 
 """
-    create_telemetry_database(label::String; kwargs...)
+    create_telemetry_database(label::String; kwargs...) -> TelemetryDatabase
 
 Create a telemetry database with `label`.
 
@@ -42,7 +42,9 @@ function create_telemetry_database(
         get_telemetry_timestamp = get_telemetry_timestamp,
         unpack_telemetry        = unpack_telemetry,
     )
-    _DEFAULT_TELEMETRY_DATABASE[] = database
+
+    set_default_telemetry_database!(database)
+
     return database
 end
 
@@ -98,15 +100,21 @@ parameters `position`, `size`, and `endianess`.
 
 # Raw transfer function
 
-The raw transfer function must have the following signature:
+The purpose of the raw transfer function is to obtain the telemetry `byte_array` created
+with the `btf` and process to a raw value. This value will be used in the transfer function
+to obtain the variable processed data.
+
+The raw transfer function can have one of the following signatures:
 
 ```julia
 function rtf(byte_array::Vector{UInt8})
 ```
 
-Its purpose is to obtain the telemetry `byte_array` created with the `btf` and process to a
-raw value. This value will be used in the transfer function to obtain the variable processed
-data.
+or
+
+```julia
+function rtf(byte_array::Vector{UInt8}, processed_variables::Dict{Symbol, Any})
+```
 
 # Transfer function
 
@@ -216,11 +224,11 @@ function add_variable!(database::TelemetryDatabase, tvd::TelemetryVariableDescri
 end
 
 """
-    set_default_database!(database::TelemetryDatabase) -> Nothing
+    set_default_telemetry_database!(database::TelemetryDatabase) -> Nothing
 
-Set `database` as the default database.
+Set the default telemetry database to `database`.
 """
-function set_default_database!(database::TelemetryDatabase)
+function set_default_telemetry_database!(database::TelemetryDatabase)
     _DEFAULT_TELEMETRY_DATABASE[] = database
     return nothing
 end
