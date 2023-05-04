@@ -20,7 +20,7 @@ function load_telemetry(filename::String)
 
     try
         tms = deserialize(stream)
-        set_default_telemetry_packet(tms)
+        set_default_telemetry_packets!(tms)
     catch e
         if e isa KeyError
             @error(

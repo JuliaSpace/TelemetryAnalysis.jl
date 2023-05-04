@@ -8,7 +8,7 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 export get_default_telemetry_packets, get_default_telemetry_source
-export get_telemetry, init_telemetry_source
+export get_telemetry, init_telemetry_source, set_default_telemetry_packets!
 
 """
     get_default_telemetry_packets() -> Any
@@ -85,7 +85,7 @@ function get_telemetry(
         @warn "No packets were found."
     end
 
-    set_default_telemetry_packet(packets)
+    set_default_telemetry_packets!(packets)
 
     return packets
 end
@@ -115,11 +115,11 @@ end
 get_telemetry() = get_telemetry(get_default_telemetry_source())
 
 """
-    set_default_telemetry_packet(tmpacket::Vector{TelemetryPacket}) -> Nothing
+    set_default_telemetry_packets!(tmpackets::Vector{TelemetryPacket}) -> Nothing
 
-Set the default telemetry packet to `tmpacket`.
+Set the default telemetry packets to `tmpackets`.
 """
-function set_default_telemetry_packet(tmpacket::Vector{TelemetryPacket{T}}) where T
-    _DEFAULT_TELEMETRY_PACKETS[] = tmpacket
+function set_default_telemetry_packets!(tmpackets::Vector{TelemetryPacket{T}}) where T
+    _DEFAULT_TELEMETRY_PACKETS[] = tmpackets
     return nothing
 end
