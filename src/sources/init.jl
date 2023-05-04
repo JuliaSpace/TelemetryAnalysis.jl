@@ -8,7 +8,7 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 export @register_interactive_source
-export init_telemetry_source, set_default_telemetry_source
+export init_telemetry_source, set_default_telemetry_source!
 
 """
     @register_interactive_source(source)
@@ -72,18 +72,18 @@ function init_telemetry_source(::Type{T}, vargs...; kwargs...) where T<:Telemetr
     if isnothing(source)
         @warn "The telemetry source was not initialized."
     else
-        set_default_telemetry_source(source)
+        set_default_telemetry_source!(source)
     end
 
     return source
 end
 
 """
-    set_default_telemetry_source(source::T) where T<:TelemetrySource
+    set_default_telemetry_source!(source::T) where T<:TelemetrySource
 
 Set the default telemetry source to `source`.
 """
-function set_default_telemetry_source(source::T) where T<:TelemetrySource
+function set_default_telemetry_source!(source::T) where T<:TelemetrySource
     _DEFAULT_TELEMETRY_SOURCE[] = source
     return nothing
 end

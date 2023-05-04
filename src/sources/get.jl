@@ -51,7 +51,7 @@ Get the telemetry data using the `source` from `start_time` up to `start_time + 
 - `d` for day.
 
 If `source` is omitted, the default telemetry source is used. For more information, see
-[`set_default_telemetry_source`](@ref).
+[`set_default_telemetry_source!`](@ref).
 
 Some sources may also implement the simplified version of this function:
 

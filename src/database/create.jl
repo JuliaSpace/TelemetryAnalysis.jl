@@ -9,6 +9,7 @@
 
 export create_telemetry_database
 export add_variable!
+export set_default_database!
 
 """
     create_telemetry_database(label::String; kwargs...)
@@ -211,6 +212,16 @@ function add_variable!(database::TelemetryDatabase, tvd::TelemetryVariableDescri
         description = tvd.description,
         endianess = tvd.endianess
     )
+    return nothing
+end
+
+"""
+    set_default_database!(database::TelemetryDatabase) -> Nothing
+
+Set `database` as the default database.
+"""
+function set_default_database!(database::TelemetryDatabase)
+    _DEFAULT_TELEMETRY_DATABASE[] = database
     return nothing
 end
 
