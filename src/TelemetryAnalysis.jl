@@ -6,6 +6,7 @@ import REPL
 using CodecZlib
 using DataFrames
 using PrettyTables
+using ProgressMeter
 using REPL.TerminalMenus
 using Reexport
 using Serialization

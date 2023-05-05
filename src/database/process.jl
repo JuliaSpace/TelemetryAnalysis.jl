@@ -10,13 +10,13 @@
 export process_telemetry_packets
 
 """
-    process_telemetry_packets([tmpackets::Vector{TelemetryPacket{T}}]; database::TelemetryDatabase) where T <: TelemetrySource -> DateFrame
+    process_telemetry_packets([tmpackets::Vector{TelemetryPacket{T}}]; database::TelemetryDatabase, kwargs...) where T <: TelemetrySource -> DateFrame
 
 Process the telemetry packets `tmpackets` using the `database`, returning the processed
 values of **all** registered telemetries. If `tmpackets` are not passed, the default
 telemetry packets will be used.
 
-    process_telemetry_packets([tmpackets::Vector{TelemetryPacket{T}},] telemetries::AbstractVector; database::TelemetryDatabase) where T <: TelemetrySource -> DataFrame
+    process_telemetry_packets([tmpackets::Vector{TelemetryPacket{T}},] telemetries::AbstractVector; database::TelemetryDatabase, kwargs...) where T <: TelemetrySource -> DataFrame
 
 Process the telemetry packets `tmpackets` using the `database`. The elements in
 `telemetries` can be a `Symbol` with the telemetry label or a `Pair{Symbol, Symbol}`. In the
@@ -25,7 +25,7 @@ by the second symbol in the pair.  For more information, see the section below.
 
 If `tmpackets` are not passed, the default telemetry packets will be used.
 
-    process_telemetry_packets([tmpackets::Vector{TelemetryPacket{T}},] telemetries::Vector{Pair{Symbol, Symbol}}; database::TelemetryDatabase) where T <: TelemetrySource -> DataFrame
+    process_telemetry_packets([tmpackets::Vector{TelemetryPacket{T}},] telemetries::Vector{Pair{Symbol, Symbol}}; database::TelemetryDatabase, kwargs...) where T <: TelemetrySource -> DataFrame
 
 Process the telemetry packets `tmpackets` using the `database`. The output variables are
 indicated in `telemetries`. It must be a vector of pairs indicating the telemetry and how
@@ -46,46 +46,58 @@ If `tmpackets` are not passed, the default telemetry packets will be used.
 !!! info
     If the keyword argument `database` is not passed, the default database is used.
 
+# Keywords
+
+- `show_progress::Bool`: If `true`, a progress bar is shown while processing the
+    telemetries. (**Default** = `true`)
+
 # Return
 
 - `DataFrame`: A `DataFrame` in which the columns are the selected values. The column names
     are the variable labels.
 """
 function process_telemetry_packets(;
-    database::TelemetryDatabase = get_default_database()
+    database::TelemetryDatabase = get_default_database(),
+    show_progress::Bool = true
 )
     return process_telemetry_packets(
         get_default_telemetry_packets();
-        database
+        database,
+        show_progress
     )
 end
 
 function process_telemetry_packets(
     tmpackets::Vector{TelemetryPacket{T}};
-    database::TelemetryDatabase = get_default_database()
+    database::TelemetryDatabase = get_default_database(),
+    show_progress::Bool = true
 ) where T <: TelemetrySource
     return process_telemetry_packets(
         tmpackets,
         keys(database.variables) |> collect;
-        database
+        database,
+        show_progress
     )
 end
 
 function process_telemetry_packets(
     telemetries::AbstractVector;
-    database::TelemetryDatabase = get_default_database()
+    database::TelemetryDatabase = get_default_database(),
+    show_progress::Bool = true
 )
     return process_telemetry_packets(
         get_default_telemetry_packets(),
         telemetries;
-        database
+        database,
+        show_progress
     )
 end
 
 function process_telemetry_packets(
     tmpackets::Vector{TelemetryPacket{T}},
     telemetries::AbstractVector;
-    database::TelemetryDatabase = get_default_database()
+    database::TelemetryDatabase = get_default_database(),
+    show_progress::Bool = true
 ) where T <: TelemetrySource
     return process_telemetry_packets(
         tmpackets,
@@ -99,25 +111,29 @@ function process_telemetry_packets(
             end
             for t in telemetries
         ];
-        database
+        database,
+        show_progress
     )
 end
 
 function process_telemetry_packets(
     telemetries::Vector{Pair{Symbol, Symbol}};
-    database::TelemetryDatabase = get_default_database()
+    database::TelemetryDatabase = get_default_database(),
+    show_progress::Bool = true
 )
     return process_telemetry_packets(
         get_default_telemetry_packets(),
         telemetries;
-        database
+        database,
+        show_progress
     )
 end
 
 function process_telemetry_packets(
     tmpackets::Vector{TelemetryPacket{T}},
     telemetries::Vector{Pair{Symbol, Symbol}};
-    database::TelemetryDatabase = get_default_database()
+    database::TelemetryDatabase = get_default_database(),
+    show_progress::Bool = true
 ) where T <: TelemetrySource
     # Assembles the columns given the user selections.
     cols = [
@@ -142,6 +158,9 @@ function process_telemetry_packets(
 
     # Re-entrant lock for operations that must not be executed concurrently.
     thread_lock = ReentrantLock()
+
+    # Progress meter.
+    progress = Progress(length(tmpackets); color = :reset, enabled = show_progress)
 
     Threads.@threads for tmpacket in tmpackets
         # Unpack the telemetry frame.
@@ -263,10 +282,13 @@ function process_telemetry_packets(
             end
         end
 
+        next!(progress)
         lock(thread_lock)
         push!(output, output_dict)
         unlock(thread_lock)
     end
+
+    finish!(progress)
 
     @info "$(nrow(output)) packets out of $(length(tmpackets)) were processed correctly."
 
