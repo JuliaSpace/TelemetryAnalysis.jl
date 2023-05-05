@@ -134,29 +134,46 @@ This function allows the following keywords:
 The bit transfer function must have the following signature:
 
 ```julia
-function btf(raw_frame::Vector{UInt8})::AbstractVector{UInt8}
+function btf(frame::Vector{UInt8})::AbstractVector{UInt8}
 ```
 
-Its purpose is to obtain the `raw_frame` from the telemetry and process to the
-bits related to the current telemetry variable. The `raw_frame` is a set of
-bytes obtained from the variable parameters `position`, `size`, and `endianess`.
+Its purpose is to obtain the `frame` from the telemetry and process to the bits related to
+the current telemetry variable. The `frame` is a set of bytes obtained from the variable
+parameters `position`, `size`, and `endianess`.
+
+### Raw transfer function
+
+The purpose of the raw transfer function is to obtain the telemetry `byte_array` created
+with the `btf` and process to a raw value. This value will be used in the transfer function
+to obtain the variable processed data.
+
+The raw transfer function can have one of the following signatures:
+
+```julia
+function rtf(byte_array::Vector{UInt8})
+```
+
+or
+
+```julia
+function rtf(byte_array::Vector{UInt8}, processed_variables::Dict{Symbol, Any})
+```
 
 ### Transfer function
 
 The variable transfer function can have one of the following signatures:
 
 ```julia
-function tf(raw::Vector{UInt8})
+function tf(raw::Any)
 ```
 
-Return the processed value of the variable given the `raw` information, obtained
-by the bit transfer function.
+Return the processed value of the variable given the `raw` information, obtained from the
+raw transfer function.
 
 ```julia
-function tf(raw::Vector{UInt8}, processed_variables::Dict{Symbol, Any})
+function tf(raw::Any, processed_variables::Dict{Symbol, Any})
 ```
 
-Return the processed value of the variable given the `raw` information, obtained
-from the function bit transfer function, and the set of processed variables in
-`processed_variables`. This signature must be use if the transfer function
-depends on others variables.
+Return the processed value of the variable given the `raw` information, obtained from the
+raw transfer function, and the set of processed variables in `processed_variables`. This
+signature must be used if the transfer function depends on others variables.
