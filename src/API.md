@@ -120,7 +120,7 @@ This function allows the following keywords:
     when searching. (**Default** = `nothing`)
 - `default_view::Symbol`: Select the default view for this variable during
     processing. For the list of available options, see
-    [`process_telemetries`](@ref). (**Default** = `:processed`)
+    [`process_telemetry_packets`](@ref). (**Default** = `:processed`)
 - `dependencies::Union{Nothing, Vector{Symbol}}`: A vector containing a list of
     dependencies required to obtain the processed value of this variable. If it
     is `nothing`, then the variable does not have dependencies.

@@ -7,16 +7,16 @@
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-export process_telemetries
+export process_telemetry_packets
 
 """
-    process_telemetries([tmpackets::Vector{TelemetryPacket{T}}]; database::TelemetryDatabase) where T <: TelemetrySource -> DateFrame
+    process_telemetry_packets([tmpackets::Vector{TelemetryPacket{T}}]; database::TelemetryDatabase) where T <: TelemetrySource -> DateFrame
 
 Process the telemetry packets `tmpackets` using the `database`, returning the processed
 values of **all** registered telemetries. If `tmpackets` are not passed, the default
 telemetry packets will be used.
 
-    process_telemetries([tmpackets::Vector{TelemetryPacket{T}},] telemetries::AbstractVector; database::TelemetryDatabase) where T <: TelemetrySource -> DataFrame
+    process_telemetry_packets([tmpackets::Vector{TelemetryPacket{T}},] telemetries::AbstractVector; database::TelemetryDatabase) where T <: TelemetrySource -> DataFrame
 
 Process the telemetry packets `tmpackets` using the `database`. The elements in
 `telemetries` can be a `Symbol` with the telemetry label or a `Pair{Symbol, Symbol}`. In the
@@ -25,7 +25,7 @@ by the second symbol in the pair.  For more information, see the section below.
 
 If `tmpackets` are not passed, the default telemetry packets will be used.
 
-    process_telemetries([tmpackets::Vector{TelemetryPacket{T}},] telemetries::Vector{Pair{Symbol, Symbol}}; database::TelemetryDatabase) where T <: TelemetrySource -> DataFrame
+    process_telemetry_packets([tmpackets::Vector{TelemetryPacket{T}},] telemetries::Vector{Pair{Symbol, Symbol}}; database::TelemetryDatabase) where T <: TelemetrySource -> DataFrame
 
 Process the telemetry packets `tmpackets` using the `database`. The output variables are
 indicated in `telemetries`. It must be a vector of pairs indicating the telemetry and how
@@ -51,43 +51,43 @@ If `tmpackets` are not passed, the default telemetry packets will be used.
 - `DataFrame`: A `DataFrame` in which the columns are the selected values. The column names
     are the variable labels.
 """
-function process_telemetries(;
+function process_telemetry_packets(;
     database::TelemetryDatabase = get_default_database()
 )
-    return process_telemetries(
+    return process_telemetry_packets(
         get_default_telemetry_packets();
         database
     )
 end
 
-function process_telemetries(
+function process_telemetry_packets(
     tmpackets::Vector{TelemetryPacket{T}};
     database::TelemetryDatabase = get_default_database()
 ) where T <: TelemetrySource
-    return process_telemetries(
+    return process_telemetry_packets(
         tmpackets,
         keys(database.variables) |> collect;
         database
     )
 end
 
-function process_telemetries(
+function process_telemetry_packets(
     telemetries::AbstractVector;
     database::TelemetryDatabase = get_default_database()
 )
-    return process_telemetries(
+    return process_telemetry_packets(
         get_default_telemetry_packets(),
         telemetries;
         database
     )
 end
 
-function process_telemetries(
+function process_telemetry_packets(
     tmpackets::Vector{TelemetryPacket{T}},
     telemetries::AbstractVector;
     database::TelemetryDatabase = get_default_database()
 ) where T <: TelemetrySource
-    return process_telemetries(
+    return process_telemetry_packets(
         tmpackets,
         [
             begin
@@ -103,18 +103,18 @@ function process_telemetries(
     )
 end
 
-function process_telemetries(
+function process_telemetry_packets(
     telemetries::Vector{Pair{Symbol, Symbol}};
     database::TelemetryDatabase = get_default_database()
 )
-    return process_telemetries(
+    return process_telemetry_packets(
         get_default_telemetry_packets(),
         telemetries;
         database
     )
 end
 
-function process_telemetries(
+function process_telemetry_packets(
     tmpackets::Vector{TelemetryPacket{T}},
     telemetries::Vector{Pair{Symbol, Symbol}};
     database::TelemetryDatabase = get_default_database()
@@ -166,9 +166,6 @@ function process_telemetries(
 
             # Convert the telemetry frame to the byte array.
             byte_array = variable_desc.btf(var_frame)
-
-            # Convert the byte array to the raw value.
-            # raw_value = variable_desc.rtf(byte_array)
 
             if type == :byte_array
                 output_dict[Symbol(string(variable_label) * "_byte_array")] = byte_array
