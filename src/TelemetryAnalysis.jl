@@ -49,6 +49,7 @@ include("./database/create.jl")
 include("./database/dependencies.jl")
 include("./database/get.jl")
 include("./database/process.jl")
+include("./database/search.jl")
 include("./database/transfer_functions.jl")
 
 include("./sources/api.jl")
