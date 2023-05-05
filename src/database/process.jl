@@ -165,7 +165,11 @@ function process_telemetry_packets(
     Threads.@threads for tmpacket in tmpackets
         # Unpack the telemetry frame.
         unpacked_frame = database.unpack_telemetry(tmpacket)
-        unpacked_frame === nothing && continue
+
+        if unpacked_frame === nothing
+            next!(progress)
+            continue
+        end
 
         # Ask for the packet timestamp.
         timestamp = database.get_telemetry_timestamp(tmpacket)
