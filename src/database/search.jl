@@ -13,7 +13,11 @@
 Search for variables registered in `database` in which their label, alias, or description
 contains `pattern`. `pattern` can be a string or a regex.
 
-If `database` is not provided, the default one is used.
+!!! note
+    If `pattern` is a string, the search will be case-insensitive.
+
+!!! note
+    If `database` is not provided, the default one is used.
 """
 function search_variables(
     pattern::T,
@@ -28,11 +32,34 @@ function search_variables(
     # Vector to store the keys of the variables that matches the search pattern.
     varnames = Symbol[]
 
+    # Check if the comparison must be case-insensitive.
+    if pattern isa AbstractString
+        case_insensitive = true
+        pattern = lowercase(pattern)
+    else
+        case_insensitive = false
+    end
+
     # Search the variables.
     for (k, v) in database.variables
-        label_match = contains(String(k), pattern)
-        alias_match = !isnothing(v.alias) && contains(Inputing(v.alias), pattern)
-        desc_match  = !isnothing(v.description) && contains(v.description, pattern)
+        label_str = case_insensitive ? lowercase(String(k)) : String(k)
+
+        alias_str = if !isnothing(v.alias)
+            case_insensitive ? lowercase(String(v.alias)) : String(v.alias)
+        else
+            ""
+        end
+
+        desc_str = if !isnothing(v.description)
+            case_insensitive ? lowercase(v.description) : v.description
+        else
+            ""
+        end
+
+        label_match = contains(label_str, pattern)
+        alias_match = contains(alias_str, pattern)
+        desc_match  = contains(desc_str,  pattern)
+
         (label_match || alias_match || desc_match) && push!(varnames, k)
     end
 
@@ -76,8 +103,8 @@ end
 """
     @searchvar(pattern)
 
-Search variables in the default database in which their alias or description contains
-`pattern`.
+Search variables in the default database in which their label, alias, or description
+contains `pattern`. For more information, see [`search_variables`](@ref).
 """
 macro searchvar(pattern)
     if (pattern isa Symbol)
