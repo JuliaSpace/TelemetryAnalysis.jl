@@ -1,13 +1,20 @@
-Application programming interface
-=================================
-
-This document describes the application programming interface (API) of
 TelemetryAnalysis.jl
+====================
+
+This package defines an API to fetch and process telemetry packages from satellites.
+
+Notice that this package does not provide a complete set of functionalities by itself. The
+user must add other packages that uses the API defined here to implement the required
+functions.
+
+## Application Programming Interface (API)
+
+This section defines the API of **TelemetryAnalysis.jl**.
 
 ## Sources
 
-A source must fetch telemetry and encapsulate it in a `Vector{TelemetryPacket}`.
-It is defined using a structure with supertype `TelemetrySource`.
+A source must fetch telemetry and encapsulate it in a `Vector{TelemetryPacket}`. It is
+defined using a structure with supertype `TelemetrySource`.
 
 ```julia
 struct MyTelemetrySource <: TelemetrySource
@@ -21,23 +28,23 @@ It must implement two functions as follows.
 function TelemetryAnalysis._api_init_telemetry_source(::Type{T}, vargs...; kwargs...)::T
 ```
 
-This function initializes the source of type `T`. The arguments and keywords can
-be selected arbitrarily depending on the source's characteristic. The function
-must return an object of type `T`.
+This function initializes the source of type `T`. The arguments and keywords can be selected
+arbitrarily depending on the source's characteristic. The function must return an object of
+type `T`.
 
-It is advisable to document the arguments and keywords by extending the
-documentation of the object `init_telemetry_source`.
+It is advisable to document the arguments and keywords by extending the documentation of the
+object `init_telemetry_source`.
 
 ```julia
 function TelemetryAnalysis._api_get_telemetry(source::T, start_time::DateTime, end_time::DateTime)::Vector{TelemetryPacket}
 ```
 
-This function must fetch the telemetry from the source between `start_time` and
-`end_time`. It must return encapsulate each packet in a `TelemetryPacket` and
-return a `Vector{TelemetryPacket}`.
+This function must fetch the telemetry from the source between `start_time` and `end_time`.
+It must return encapsulate each packet in a `TelemetryPacket` and return a
+`Vector{TelemetryPacket}`.
 
-Some sources may also implement the simplified version of `_api_get_telemetry`
-that fetches all the packets available:
+Some sources may also implement the simplified version of `_api_get_telemetry` that fetches
+all the packets available:
 
 ```julia
 function TelemetryAnalysis._api_get_telemetry(source::T)::Vector{TelemetryPacket}
@@ -45,16 +52,16 @@ function TelemetryAnalysis._api_get_telemetry(source::T)::Vector{TelemetryPacket
 
 ### Registering the source for interactive use
 
-If the user calls the function `init_telemetry_source()`, the system will
-provide a list of registered sources for the user. However, this functionality
-requires that the source defines the API function:
+If the user calls the function `init_telemetry_source()`, the system will provide a list of
+registered sources for the user. However, this functionality requires that the source
+defines the API function:
 
 ```julia
 function _api_init_telemetry_source(::Type{T})
 ```
 
-**without** any other argument or keyword. Hence, it must obtain the information
-from the user interactively, or define it statically.
+**without** any other argument or keyword. Hence, it must obtain the information from the
+user interactively, or define it statically.
 
 A source can be registered for interactive use by:
 
@@ -78,16 +85,15 @@ create_telemetry_database(label::String; kwargs...)
 
 where `label` defined the database label. The available keywords are:
 
-- `get_telemetry_timestamp::Function`: A function that must return the timestamp
-    of a telemetry packet. The API is:
+- `get_telemetry_timestamp::Function`: A function that must return the timestamp of a
+  telemetry packet. The API is:
 
     `get_telemetry_timestamp(tmpacket::TelemetryPacket)::Bool`
 
     (**Default** = `_default_get_telemetry_timestamp`)
-- `unpack_telemetry::Function`: A function that must return a
-    `AbstractVector{UInt8}` with the telemetry frame unpacked, which will be
-    passed to the transfer functions. If the frame is not valid, it must return
-    `nothing`. The function API must be:
+- `unpack_telemetry::Function`: A function that must return a `AbstractVector{UInt8}` with
+  the telemetry frame unpacked, which will be passed to the transfer functions. If the frame
+  is not valid, it must return `nothing`. The function API must be:
 
     `unpack_telemetry(tmpacket::TelemetryPacket)::AbstractVector{UInt8}`
 
@@ -109,22 +115,21 @@ add_variable!(database::TelemetryDatabase, label::Symbol, [position::Int, size::
     [`Transfer function`](@ref).
 
 !!! note
-    The `position` and `size` can be omitted if the variable is obtained only by
-    the processed values of other variables. In this case, the keyword
-    `dependencies` must not be `Nothing`.
+    The `position` and `size` can be omitted if the variable is obtained only by the
+    processed values of other variables. In this case, the keyword `dependencies` must not
+    be `Nothing`.
 
 This function allows the following keywords:
 
-- `alias::Union{Nothing, Symbol}`: An alias of the variable. In this case, the
-    function [`get_variable_description`](@ref) will also consider this alias
-    when searching. (**Default** = `nothing`)
-- `default_view::Symbol`: Select the default view for this variable during
-    processing. For the list of available options, see
-    [`process_telemetry_packets`](@ref). (**Default** = `:processed`)
-- `dependencies::Union{Nothing, Vector{Symbol}}`: A vector containing a list of
-    dependencies required to obtain the processed value of this variable. If it
-    is `nothing`, then the variable does not have dependencies.
-    (**Default** = `nothing`)
+- `alias::Union{Nothing, Symbol}`: An alias of the variable. In this case, the function
+  [`get_variable_description`](@ref) will also consider this alias when searching.
+  (**Default** = `nothing`)
+- `default_view::Symbol`: Select the default view for this variable during processing. For
+  the list of available options, see [`process_telemetry_packets`](@ref).
+  (**Default** = `:processed`)
+- `dependencies::Union{Nothing, Vector{Symbol}}`: A vector containing a list of dependencies
+  required to obtain the processed value of this variable. If it is `nothing`, then the
+  variable does not have dependencies. (**Default** = `nothing`)
 - `description::String`: A description about the variable.
 - `endianess::Symbol`: `:littleendian` or `:bigendian` to indicate the endianess
     of the variable. (**Default** = `:littleendian`)
