@@ -1,6 +1,12 @@
 TelemetryAnalysis.jl Changelog
 ==============================
 
+Version 2.0.1
+-------------
+
+- ![Bugfix][badge-bugfix] We fixed a possible racing condition when processing the
+  telemetries using multiple threads.
+
 Version 2.0.0
 -------------
 
