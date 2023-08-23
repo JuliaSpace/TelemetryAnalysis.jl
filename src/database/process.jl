@@ -208,14 +208,14 @@ function process_telemetry_packets(
                 # First, we check if we already computed the dependencies for this variable
                 # in the database. If not, we perform a topological sort to obtain the
                 # process order.
+                lock(thread_lock)
                 if !haskey(database._variable_dependencies, variable_label)
                     deps = _dependency_topological_sort(variable_label, database)
-                    lock(thread_lock)
                     database._variable_dependencies[variable_label] = deps
-                    unlock(thread_lock)
                 else
                     deps = database._variable_dependencies[variable_label]
                 end
+                unlock(thread_lock)
 
                 if !isnothing(deps)
                     for var in deps
