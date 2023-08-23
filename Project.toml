@@ -1,7 +1,7 @@
 name = "TelemetryAnalysis"
 uuid = "d7a29a4d-ab51-489b-bb94-63d3a201890b"
 authors = ["Ronan Arraes Jardim Chagas <ronisbr@gmail.com>"]
-version = "2.0.0"
+version = "2.0.1"
 
 [deps]
 CodecZlib = "944b1d66-785c-5afd-91f1-9de20f533193"
