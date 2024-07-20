@@ -1,6 +1,12 @@
 TelemetryAnalysis.jl Changelog
 ==============================
 
+Version 2.0.3
+-------------
+
+- ![Enhancement][badge-enhancement] We added compat bounds for stdlibs.
+- ![Enhancement][badge-enhancement] General improvements in the source code.
+
 Version 2.0.2
 -------------
 
