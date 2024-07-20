@@ -1,6 +1,12 @@
 TelemetryAnalysis.jl Changelog
 ==============================
 
+Version 2.0.2
+-------------
+
+- ![Bugfix][badge-bugfix] We fixed the conversion of variable `alias` in `@searchvar`.
+- ![Bugfix][badge-bugfix] The bit transfer function can output any `AbstractVector{UInt8}`.
+
 Version 2.0.1
 -------------
 
