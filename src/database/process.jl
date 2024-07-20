@@ -342,7 +342,7 @@ end
 # Compute the raw value of a telemetry variable.
 function _raw_telemetry_variable(
     processed_variables::Dict{Symbol, Any},
-    byte_array::Vector{UInt8},
+    byte_array::AbstractVector{UInt8},
     variable_desc::TelemetryVariableDescription
 )
     # Check which method signature must be called to obtain the telemetry variable raw
