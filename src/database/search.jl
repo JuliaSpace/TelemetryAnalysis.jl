@@ -73,7 +73,7 @@ function search_variables(
                 out = string(v)
 
                 if !isnothing(alias)
-                    out *= "(" * alias * ")"
+                    out *= " (" * String(alias) * ")"
                 end
 
                 return out
