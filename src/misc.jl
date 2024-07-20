@@ -1,11 +1,8 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+## Description #############################################################################
 #
-# Description
-# ==========================================================================================
+# Miscellaneous functions.
 #
-#   Miscellaneous functions.
-#
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+############################################################################################
 
 export analyze_byte_array, byte_array_to_hex, byte_array_to_binary, checkbit
 
@@ -25,7 +22,7 @@ function analyze_byte_array(
     data = Matrix{String}(undef, 3, num_bytes)
 
     for i = 1:num_bytes
-        byte = byte_array[begin + i - 1]
+        byte = byte_array[i - 1 + begin]
 
         hex_str = "0x" * (string(byte, base = 16, pad = 2) |> uppercase)
         dec_str = string(byte)

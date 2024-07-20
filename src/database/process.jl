@@ -1,11 +1,8 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+## Description #############################################################################
 #
-# Description
-# ==========================================================================================
+# Functions to process variables in the database.
 #
-#   Functions to process variables in the database.
-#
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+############################################################################################
 
 export process_telemetry_packets
 
@@ -44,6 +41,7 @@ The acceptable values for the output format are:
 If `tmpackets` are not passed, the default telemetry packets will be used.
 
 !!! info
+
     If the keyword argument `database` is not passed, the default database is used.
 
 # Keywords
@@ -304,7 +302,7 @@ function process_telemetry_packets(
 end
 
 ############################################################################################
-#                                    Private Functions
+#                                    Private Functions                                     #
 ############################################################################################
 
 function _get_variable_telemetry_frame(

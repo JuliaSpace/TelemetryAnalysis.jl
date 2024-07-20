@@ -1,11 +1,8 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+## Description #############################################################################
 #
-# Description
-# ==============================================================================
+# Functions related to IO.
 #
-#   Functions related to IO.
-#
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+############################################################################################
 
 export get_user_option
 
@@ -23,12 +20,11 @@ function get_user_option(text::String, options::AbstractVector)
     return request(cy * text * cr, RadioMenu(options, pagesize = 5))
 end
 
-#                                        Julia API
-# ==========================================================================================
+############################################################################################
+#                                        Julia API                                         #
+############################################################################################
 
-
-# TelemetryPacket
-# ------------------------------------------------------------------------------------------
+# == TelemetryPacket =======================================================================
 
 function show(io::IO, tmpacket::TelemetryPacket{T}) where T <: TelemetrySource
     num_bytes = length(tmpacket.data)
@@ -64,8 +60,7 @@ function show(io::IO, ::MIME"text/plain", tmpacket::TelemetryPacket{T}) where T<
     return nothing
 end
 
-# TelemetryDatabase
-# ------------------------------------------------------------------------------------------
+# == TelemetryDatabase =====================================================================
 
 function show(io::IO, db::TelemetryDatabase)
     num_variables = length(db.variables)
@@ -90,8 +85,7 @@ function show(io::IO, ::MIME"text/plain", db::TelemetryDatabase)
     return nothing
 end
 
-# TelemetryVariableDescription
-# ------------------------------------------------------------------------------------------
+# == TelemetryVariableDescription ==========================================================
 
 function show(io::IO, var::TelemetryVariableDescription)
     print(io, "TelemetryVariableDescription: $(var.label)")

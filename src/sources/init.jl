@@ -1,11 +1,8 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+## Description #############################################################################
 #
-# Description
-# ==========================================================================================
+# Functions related to the initialization of sources.
 #
-#   Functions related to the initialization of sources.
-#
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+############################################################################################
 
 export @register_interactive_source
 export init_telemetry_source, set_default_telemetry_source!
@@ -46,6 +43,7 @@ This function returns an object of type `T` if the initialization was successful
 `nothing` otherwise.
 
 !!! note
+
     If the source is correctly initialized, it is select as the default source.
 """
 function init_telemetry_source()

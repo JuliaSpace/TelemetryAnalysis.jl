@@ -1,11 +1,8 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+## Description #############################################################################
 #
-# Description
-# ==========================================================================================
+# Functions to fetch the telemetry from the sources.
 #
-#   Functions to fetch the telemetry from the sources.
-#
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+############################################################################################
 
 export get_default_telemetry_packets, get_default_telemetry_source
 export get_telemetry, init_telemetry_source, set_default_telemetry_packets!

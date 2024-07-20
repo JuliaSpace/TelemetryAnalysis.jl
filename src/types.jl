@@ -1,11 +1,8 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+## Description #############################################################################
 #
-# Description
-# ==========================================================================================
+# Definition of types and structures.
 #
-#   Definition of types and structures.
-#
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+############################################################################################
 
 export TelemetryDatabase, TelemetryVariableDescription, TelemetrySource
 export TelemetryPacket
@@ -97,8 +94,7 @@ Defines a telemetry database.
     variables::Dict{Symbol, TelemetryVariableDescription} =
         Dict{Symbol, TelemetryVariableDescription}()
 
-    # Private fields
-    # ======================================================================================
+    # == Private fields ====================================================================
 
     # This field caches the dependency vector of each variable sorted in topological order.
     # It is build when a variable is processed.

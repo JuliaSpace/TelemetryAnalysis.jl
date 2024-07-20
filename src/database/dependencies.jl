@@ -1,11 +1,8 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+## Description #############################################################################
 #
-# Description
-# ==========================================================================================
+# Functions to obtain the dependencies of each variable.
 #
-#   Functions to obtain the dependencies of each variable.
-#
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+############################################################################################
 
 # Obtain the topological sort of the dependency graph. Hence, we obtain a ordered list of
 # variables that must be processed before processing the one with label `variable_label`.
