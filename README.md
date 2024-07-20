@@ -1,5 +1,4 @@
-TelemetryAnalysis.jl
-====================
+# TelemetryAnalysis.jl
 
 This package defines an API to fetch and process telemetry packages from satellites.
 
@@ -88,7 +87,7 @@ where `label` defined the database label. The available keywords are:
 - `get_telemetry_timestamp::Function`: A function that must return the timestamp of a
   telemetry packet. The API is:
 
-    `get_telemetry_timestamp(tmpacket::TelemetryPacket)::Bool`
+    `get_telemetry_timestamp(tmpacket::TelemetryPacket)::DateTime`
 
     (**Default** = `_default_get_telemetry_timestamp`)
 - `unpack_telemetry::Function`: A function that must return a `AbstractVector{UInt8}` with
@@ -139,7 +138,7 @@ This function allows the following keywords:
 The bit transfer function must have the following signature:
 
 ```julia
-function btf(frame::Vector{UInt8})::AbstractVector{UInt8}
+function btf(frame::AbstractVector{UInt8})::AbstractVector{UInt8}
 ```
 
 Its purpose is to obtain the `frame` from the telemetry and process to the bits related to
@@ -155,13 +154,13 @@ to obtain the variable processed data.
 The raw transfer function can have one of the following signatures:
 
 ```julia
-function rtf(byte_array::Vector{UInt8})
+function rtf(byte_array::AbstractVector{UInt8})
 ```
 
 or
 
 ```julia
-function rtf(byte_array::Vector{UInt8}, processed_variables::Dict{Symbol, Any})
+function rtf(byte_array::AbstractVector{UInt8}, processed_variables::Dict{Symbol, Any})
 ```
 
 ### Transfer function
