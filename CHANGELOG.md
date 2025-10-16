@@ -1,6 +1,12 @@
 TelemetryAnalysis.jl Changelog
 ==============================
 
+Version 2.1.0
+-------------
+
+- ![Info][badge-info] Julia 1.10 is now the minimum supported version.
+- ![Info][badge-info] PrettyTables.jl was updated to v3.
+
 Version 2.0.3
 -------------
 
