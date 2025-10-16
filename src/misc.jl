@@ -13,10 +13,10 @@ function analyze_byte_array(
 )
     num_bytes = length(byte_array)
 
-    header = ["#$i" for i in 1:num_bytes]
+    column_labels = ["#$i" for i in 1:num_bytes]
 
     if order == :descending
-        header = header |> reverse
+        column_labels = column_labels |> reverse
     end
 
     data = Matrix{String}(undef, 3, num_bytes)
@@ -48,13 +48,20 @@ function analyze_byte_array(
         end
     end
 
+    table_format = TextTableFormat(
+        ;
+        @text__no_horizontal_lines,
+        @text__no_vertical_lines,
+        horizontal_line_after_column_labels  = true,
+        vertical_line_after_row_label_column = true
+    )
+
     pretty_table(
         data;
-        row_names = ["Binary", "Decimal", "Hexadecimal"],
-        row_name_column_title = "Byte #",
-        header = header,
-        hlines = [:header],
-        vlines = [1]
+        column_labels  = column_labels,
+        row_labels     = ["Binary", "Decimal", "Hexadecimal"],
+        stubhead_label = "Byte #",
+        table_format   = table_format
     )
 end
 

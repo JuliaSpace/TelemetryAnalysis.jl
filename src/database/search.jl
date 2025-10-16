@@ -80,15 +80,24 @@ function search_variables(
             map(v -> database.variables[v].description, varnames)
         )
 
+        hl1 = TextHighlighter((data, i, j) -> j == 1, crayon"yellow bold")
+
+        table_format = TextTableFormat(
+            ;
+            @text__no_horizontal_lines,
+            @text__no_vertical_lines,
+            horizontal_line_after_column_labels = true,
+            suppress_vertical_lines_at_column_labels = false,
+            vertical_lines_at_data_columns = [1]
+        )
+
         pretty_table(
             matrix;
-            alignment    = [:r, :l],
-            crop         = :horizontal,
-            header       = ["Variable Label", "Description"],
-            highlighters = hl_col(1, crayon"yellow bold"),
-            hlines       = [:header],
-            vcrop_mode   = :horizontal,
-            vlines       = [1]
+            alignment                         = [:r, :l],
+            column_labels                     = ["Variable Label", "Description"],
+            fit_table_in_display_horizontally = true,
+            highlighters                      = [hl1],
+            table_format                      = table_format
         )
 
     else
