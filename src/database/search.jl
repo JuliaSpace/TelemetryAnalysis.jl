@@ -96,6 +96,7 @@ function search_variables(
             alignment                         = [:r, :l],
             column_labels                     = ["Variable Label", "Description"],
             fit_table_in_display_horizontally = true,
+            fit_table_in_display_vertically   = false,
             highlighters                      = [hl1],
             table_format                      = table_format
         )
