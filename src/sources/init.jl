@@ -23,7 +23,7 @@ macro register_interactive_source(source)
 
             return nothing
         else
-            error("$($(esc(source))) is not a TelemetrySource")
+            error("$($(esc(source))) is not a TelemetrySource.")
         end
     )
 
@@ -31,24 +31,25 @@ macro register_interactive_source(source)
 end
 
 """
-    init_telemetry_source([::Type{T}, vargs...; kwargs...]) where T<:TelemetrySource -> Union{T, Nothing}
+    init_telemetry_source([::Type{T}, vargs...; kwargs...]) -> Union{T, Nothing}
+        where T <: TelemetrySource
 
 Initialize the telemetry source `T`. If all arguments and keywords are omitted, the function
 selects the source interactively.
 
-The arguments `vargs...` and keywords `kwargs...` to initialize the source depends on the
-source type.
+The arguments `vargs...` and keywords `kwargs...` used to initialize the source depend on
+the source type.
 
 This function returns an object of type `T` if the initialization was successful or
 `nothing` otherwise.
 
 !!! note
 
-    If the source is correctly initialized, it is select as the default source.
+    If the source is correctly initialized, it is selected as the default source.
 """
 function init_telemetry_source()
     if isempty(_INTERACTIVE_SOURCES)
-        @warn "There is no registered interactive sources."
+        @warn "There are no registered interactive sources."
         return nothing
     end
 
@@ -77,7 +78,7 @@ function init_telemetry_source(::Type{T}, vargs...; kwargs...) where T<:Telemetr
 end
 
 """
-    set_default_telemetry_source!(source::T) where T<:TelemetrySource -> Nothing
+    set_default_telemetry_source!(source::T) -> Nothing where T <: TelemetrySource
 
 Set the default telemetry source to `source`.
 """
