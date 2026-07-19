@@ -6,6 +6,13 @@
 
 export analyze_byte_array, byte_array_to_hex, byte_array_to_binary, checkbit
 
+const _HEX_DIGITS = codeunits("0123456789ABCDEF")
+
+"""
+    analyze_byte_array(byte_array::AbstractVector{UInt8}; kwargs...)
+
+Print a table containing binary, decimal, and hexadecimal representations of `byte_array`.
+"""
 function analyze_byte_array(
     byte_array::AbstractVector{UInt8};
     order::Symbol = :descending,
@@ -71,30 +78,41 @@ end
 Convert the `byte_array` to a binary string.
 """
 function byte_array_to_binary(byte_array::AbstractVector{UInt8})
-    hex_buf = IOBuffer(sizehint = 2length(byte_array) + 2)
-    write(hex_buf, "0b")
+    output = Base.StringVector(2 + 8length(byte_array))
+    output[1] = UInt8('0')
+    output[2] = UInt8('b')
+    output_index = 3
 
-    for i in reverse(eachindex(byte_array))
-        write(hex_buf, string(byte_array[i], base = 2, pad = 8) |> uppercase)
+    @inbounds for index in Iterators.reverse(eachindex(byte_array))
+        byte = byte_array[index]
+        for shift in 7:-1:0
+            output[output_index] = UInt8('0') + ((byte >> shift) & 0x01)
+            output_index += 1
+        end
     end
 
-    return String(take!(hex_buf))
+    return String(output)
 end
 
 """
     byte_array_to_hex(byte_array::AbstractVector{UInt8}) -> String
 
-Convert the `byte_array` to an hexadecimal string.
+Convert the `byte_array` to a hexadecimal string.
 """
 function byte_array_to_hex(byte_array::AbstractVector{UInt8})
-    hex_buf = IOBuffer(sizehint = 2length(byte_array) + 2)
-    write(hex_buf, "0x")
+    output = Base.StringVector(2 + 2length(byte_array))
+    output[1] = UInt8('0')
+    output[2] = UInt8('x')
+    output_index = 3
 
-    for i in reverse(eachindex(byte_array))
-        write(hex_buf, string(byte_array[i], base = 16, pad = 2) |> uppercase)
+    @inbounds for index in Iterators.reverse(eachindex(byte_array))
+        byte = byte_array[index]
+        output[output_index] = _HEX_DIGITS[Int(byte >> 4) + 1]
+        output[output_index + 1] = _HEX_DIGITS[Int(byte & 0x0F) + 1]
+        output_index += 2
     end
 
-    return String(take!(hex_buf))
+    return String(output)
 end
 
 """
@@ -103,5 +121,12 @@ end
 Check if the `bit` in `raw` is set. The least significant bit is 1.
 """
 function checkbit(raw::T, bit::Integer) where T<:Integer
-    return (raw & (T(1) << (bit - 1))) > 0
+    bit >= 1 || throw(ArgumentError("bit position must be at least 1; received $bit."))
+    if isbitstype(T)
+        width = 8sizeof(T)
+        bit <= width || throw(ArgumentError(
+            "bit position must not exceed $width for $T; received $bit."))
+    end
+    mask = one(raw) << (bit - 1)
+    return (raw & mask) != zero(raw)
 end
