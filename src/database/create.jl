@@ -21,7 +21,7 @@ Create a telemetry database with `label`.
     `get_telemetry_timestamp(tmpacket::TelemetryPacket)::DateTime`
 
     (**Default** = `_default_get_telemetry_timestamp`)
-- `unpack_telemetry::Function`: A function that must return a `AbstractVector{UInt8}` with
+- `unpack_telemetry::Function`: A function that must return an `AbstractVector{UInt8}` with
     the telemetry frame unpacked, which will be passed to the transfer functions. If the
     frame is not valid, it must return `nothing`. The function API must be:
 
@@ -46,7 +46,16 @@ function create_telemetry_database(
 end
 
 """
-    add_variable!(database::TelemetryDatabase, label::Symbol, position::Integer, size::Integer, tf::Function, btf::Function = default_bit_transfer_function, rtf::Function = default_raw_transfer_function; kwargs...) -> Nohting
+    add_variable!(
+        database::TelemetryDatabase,
+        label::Symbol,
+        position::Integer,
+        size::Integer,
+        tf::Function,
+        btf::Function = default_bit_transfer_function,
+        rtf::Function = default_raw_transfer_function;
+        kwargs...
+    ) -> Nothing
 
 Add a variable to the `database`.
 
@@ -66,7 +75,7 @@ Add a variable to the `database`.
 !!! note
     The `position` and `size` can be omitted if the variable is obtained only by the
     processed values of other variables. In this case, the keyword `dependencies` must not
-    be `Nothing`.
+    be `nothing`.
 
 # Keywords
 
@@ -74,13 +83,13 @@ Add a variable to the `database`.
     [`get_variable_description`](@ref) will also consider this alias when searching.
     (**Default** = `nothing`)
 - `default_view::Symbol`: Select the default view for this variable during processing. For
-    the list of available options, see [`process_telemetries`](@ref).
+    the list of available options, see [`process_telemetry_packets`](@ref).
     (**Default** = `:processed`)
 - `dependencies::Union{Nothing, Vector{Symbol}}`: A vector containing a list of dependencies
     required to obtain the processed value of this variable. If it is `nothing`, then the
     variable does not have dependencies. (**Default** = `nothing`)
 - `description::String`: A description about the variable.
-- `endianess::Symbol`: `:littleendian` or `:bigendian` to indicate the endianess of the
+- `endianess::Symbol`: `:littleendian` or `:bigendian` to indicate the endianness of the
     variable. (**Default** = `:littleendian`)
 
 # Bit transfer function
@@ -91,15 +100,16 @@ The bit transfer function must have the following signature:
 function btf(frame::AbstractVector{UInt8})::AbstractVector{UInt8}
 ```
 
-Its purpose is to obtain the `frame` from the telemetry and process to the bits related to
-the current telemetry variable. The `frame` is a set of bytes obtained from the variable
-parameters `position`, `size`, and `endianess`.
+Its purpose is to obtain the bits related to the current variable from `frame`. The frame is
+an ephemeral, read-only `AbstractVector{UInt8}` view obtained from `position`, `size`, and
+`endianess`. The callback must not mutate or retain it.
 
 # Raw transfer function
 
-The purpose of the raw transfer function is to obtain the telemetry `byte_array` created
-with the `btf` and process to a raw value. This value will be used in the transfer function
-to obtain the variable processed data.
+The purpose of the raw transfer function is to process the telemetry `byte_array` created
+with the `btf` into a raw value. The byte input is ephemeral and read-only and must not be
+mutated or retained. It can be an `AbstractVector` view. The raw value will be used in the
+transfer function to obtain the processed variable data.
 
 The raw transfer function can have one of the following signatures:
 
@@ -130,7 +140,9 @@ function tf(raw::Any, processed_variables::Dict{Symbol, Any})
 
 Return the processed value of the variable given the `raw` information, obtained from the
 raw transfer function, and the set of processed variables in `processed_variables`. This
-signature must be used if the transfer function depends on others variables.
+signature must be used if the transfer function depends on other variables. Callbacks may
+consume only declared dependencies; context keys are canonical labels. Ordering among
+unrelated callbacks is not guaranteed, and each required stage executes once per packet.
 """
 function add_variable!(
     database::TelemetryDatabase,
@@ -146,25 +158,33 @@ function add_variable!(
     description::String = "",
     endianess::Symbol = :littleendian
 )
-    label == :timestamp && error("A variable cannot have the label `:timestamp`.")
+    copied_dependencies = isnothing(dependencies) ? nothing : copy(dependencies)
+    _validate_variable_range(position, size, copied_dependencies, label)
 
     if isempty(description)
         description = "Variable $label"
     end
 
-    database.variables[label] = TelemetryVariableDescription(
+    variable_desc = TelemetryVariableDescription(
         alias,
         default_view,
-        dependencies,
+        copied_dependencies,
         rstrip(description, '\n'),
         endianess,
         label,
-        position,
-        size,
+        Int(position),
+        Int(size),
         tf,
         btf,
         rtf
     )
+
+    variables = copy(database.variables)
+    variables[label] = variable_desc
+    _build_database_index(variables)
+
+    database.variables[label] = variable_desc
+    empty!(database._variable_dependencies)
     return nothing
 end
 
@@ -178,10 +198,8 @@ function add_variable!(
     description::String = "",
     endianess::Symbol = :littleendian
 )
-    label == :timestamp && error("A variable cannot have the label `:timestamp`.")
-
     if isempty(dependencies)
-        error("A derived variable must have dependencies.")
+        throw(ArgumentError("A derived variable must have dependencies."))
     end
 
     if isempty(description)
@@ -235,9 +253,11 @@ end
 ############################################################################################
 
 function _default_unpack_telemetry(tmpacket::TelemetryPacket{T}) where T<:TelemetrySource
-    return true
+    return tmpacket.data
 end
 
-function _default_get_telemetry_timestamp(tmpacket::TelemetryPacket{T}) where T<:TelemetrySource
+function _default_get_telemetry_timestamp(
+    tmpacket::TelemetryPacket{T}
+) where T<:TelemetrySource
     return tmpacket.timestamp
 end

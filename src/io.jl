@@ -28,11 +28,18 @@ end
 
 function show(io::IO, tmpacket::TelemetryPacket{T}) where T <: TelemetrySource
     num_bytes = length(tmpacket.data)
-    print(io, "TelemetryPacket {$T} (Timestamp = $(tmpacket.timestamp), $(num_bytes) bytes)")
+    print(
+        io,
+        "TelemetryPacket {$T} (Timestamp = $(tmpacket.timestamp), $(num_bytes) bytes)",
+    )
     return nothing
 end
 
-function show(io::IO, ::MIME"text/plain", tmpacket::TelemetryPacket{T}) where T<:TelemetrySource
+function show(
+    io::IO,
+    ::MIME"text/plain",
+    tmpacket::TelemetryPacket{T},
+) where T <: TelemetrySource
     # Colors.
     hascolor = get(io, :color, false)
     cr = (hascolor ? string(crayon"reset")       : "")
@@ -45,11 +52,12 @@ function show(io::IO, ::MIME"text/plain", tmpacket::TelemetryPacket{T}) where T<
     print(  io, cy * "         Data" * cr * " : " * string(num_bytes) * " bytes")
     aux =       cy * "     Metadata" * cr * " : "
 
-    if !isempty(tmpacket.metadata)
-        keys_str   = tmpacket.metadata |> keys |> collect
+    metadata = tmpacket.metadata
+    if metadata !== nothing && !isempty(metadata)
+        keys_str   = metadata |> keys |> collect
         field_size = maximum(textwidth.(keys_str))
 
-        for (k, v) in tmpacket.metadata
+        for (k, v) in metadata
             println(io)
             padding = field_size - textwidth(k)
             print(io, aux * cb * string(k) * cr * " "^padding * " => " * string(v))
@@ -79,8 +87,16 @@ function show(io::IO, ::MIME"text/plain", db::TelemetryDatabase)
     println(io, "TelemetryDatabase:")
     println(io, cy * "                        Label" * cr * " : " * db.label)
     println(io, cy * "          Number of variables" * cr * " : " * string(num_variables))
-    println(io, cy * "       Get timestamp function" * cr * " : " * cc * string(db.get_telemetry_timestamp))
-    print(  io, cy * "    Unpack telemetry function" * cr * " : " * cc * string(db.unpack_telemetry))
+    println(
+        io,
+        cy * "       Get timestamp function" * cr * " : " *
+        cc * string(db.get_telemetry_timestamp),
+    )
+    print(
+        io,
+        cy * "    Unpack telemetry function" * cr * " : " *
+        cc * string(db.unpack_telemetry),
+    )
 
     return nothing
 end
@@ -104,9 +120,12 @@ function show(io::IO, ::MIME"text/plain", var::TelemetryVariableDescription)
     endianess_str = var.endianess == :bigendian ? "Big endian" : "Little endian"
 
     println(io, "TelemetryVariableDescription:")
-    println(io, cy * "                    Label" * cr * " : " * string(var.label) * alias_str)
+    println(
+        io,
+        cy * "                    Label" * cr * " : " * string(var.label) * alias_str,
+    )
     println(io, cy * "              Description" * cr * " : " * var.description)
-    println(io, cy * "                Endianess" * cr * " : " * endianess_str)
+    println(io, cy * "               Endianness" * cr * " : " * endianess_str)
     println(io, cy * "                 Position" * cr * " : " * string(var.position))
     println(io, cy * "                     Size" * cr * " : " * string(var.size) * " bytes")
     println(io, cy * "    Bit Transfer function" * cr * " : " * cc * string(var.btf))
