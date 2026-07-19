@@ -27,24 +27,26 @@ function _build_execution_plan(
             "Supported views are $(join(_SUPPORTED_VARIABLE_VIEWS, ", "))."
         ))
 
-        variable_desc = _get_variable_description(requested_label, database, index)
+        variable_desc   = _get_variable_description(requested_label, database, index)
         canonical_label = variable_desc.label
+
         if !haskey(stage_masks, canonical_label)
             stage_masks[canonical_label] = UInt8(0)
             push!(discovery_order, canonical_label)
         end
+
         stage_masks[canonical_label] |= _required_stage_mask(view)
-        push!(outputs, OutputSpec(
-            canonical_label,
-            0,
-            view,
-            _output_name(requested_label, view)
-        ))
+
+        push!(
+            outputs,
+            OutputSpec(canonical_label, 0, view, _output_name(requested_label, view))
+        )
     end
 
     _validate_output_names(outputs)
 
     _expand_dependency_union!(stage_masks, discovery_order, database, index)
+
     ordered_labels = _topological_order(
         discovery_order,
         stage_masks,
@@ -53,9 +55,11 @@ function _build_execution_plan(
     )
 
     nodes = AbstractExecutionNode[]
-    ordered_masks = UInt8[]
     sizehint!(nodes, length(ordered_labels))
+
+    ordered_masks = UInt8[]
     sizehint!(ordered_masks, length(ordered_labels))
+
     for label in ordered_labels
         variable_desc = _get_variable_description(label, database, index)
         push!(nodes, _execution_node(variable_desc))
@@ -64,6 +68,7 @@ function _build_execution_plan(
 
     # Resolve output indices only after dependency ordering fixes final node positions.
     node_indices = Dict(node.label => index for (index, node) in pairs(nodes))
+
     resolved_outputs = [
         OutputSpec(
             output.canonical_label,
@@ -85,6 +90,7 @@ Reject concrete output-name collisions in the current request.
 function _validate_output_names(outputs::Vector{OutputSpec})
     # Seed timestamp ownership so requested columns cannot collide with the fixed column.
     owners = Dict{Symbol, Int}(:timestamp => 0)
+
     for (selection_index, output) in pairs(outputs)
         if haskey(owners, output.output_name)
             throw(ArgumentError(
@@ -94,6 +100,7 @@ function _validate_output_names(outputs::Vector{OutputSpec})
         end
         owners[output.output_name] = selection_index
     end
+
     return nothing
 end
 
@@ -144,19 +151,25 @@ function _expand_dependency_union!(
     # Use an index queue over discovery order for deterministic linear traversal.
     expanded = Set{Symbol}()
     queue_index = 1
+
     while queue_index <= length(discovery_order)
         label = discovery_order[queue_index]
         queue_index += 1
+
         label in expanded && continue
         stage_masks[label] & _STAGE_RAW == 0 && continue
+
         push!(expanded, label)
 
         variable_desc = _get_variable_description(label, database, index)
-        dependencies = variable_desc.dependencies
+        dependencies  = variable_desc.dependencies
+
         isnothing(dependencies) && continue
+
         for dependency in dependencies
-            dependency_desc = _resolve_dependency(dependency, label, database, index)
+            dependency_desc      = _resolve_dependency(dependency, label, database, index)
             canonical_dependency = dependency_desc.label
+
             # Promote every dependency through processed and revisit byte-only discoveries.
             if !haskey(stage_masks, canonical_dependency)
                 stage_masks[canonical_dependency] = UInt8(0)
@@ -164,6 +177,7 @@ function _expand_dependency_union!(
             elseif stage_masks[canonical_dependency] & _STAGE_RAW == 0
                 push!(discovery_order, canonical_dependency)
             end
+
             stage_masks[canonical_dependency] |= _STAGES_THROUGH_PROCESSED
         end
     end
@@ -207,8 +221,9 @@ function _topological_order(
     index::DatabaseIndex
 )
     # Visit roots in deterministic discovery order; each edge is handled by three-state DFS.
-    states = Dict{Symbol, UInt8}()
+    states         = Dict{Symbol, UInt8}()
     ordered_labels = Symbol[]
+
     for label in discovery_order
         _topological_visit!(
             label,
@@ -243,6 +258,7 @@ function _topological_visit!(
 
     if stage_masks[label] & _STAGE_RAW != 0
         dependencies = _get_variable_description(label, database, index).dependencies
+
         if !isnothing(dependencies)
             for dependency in dependencies
                 dependency_desc = _resolve_dependency(dependency, label, database, index)
@@ -260,6 +276,7 @@ function _topological_visit!(
 
     states[label] = UInt8(2)
     push!(ordered_labels, label)
+
     return nothing
 end
 

@@ -85,8 +85,7 @@ function search_variables(
 
         hl1 = TextHighlighter((data, i, j) -> j == 1, crayon"yellow bold")
 
-        table_format = TextTableFormat(
-            ;
+        table_format = TextTableFormat(;
             @text__no_horizontal_lines,
             @text__no_vertical_lines,
             horizontal_line_after_column_labels = true,

@@ -1,9 +1,3 @@
-## Description #############################################################################
-#
-# Main module definition, package imports, constants, and source includes.
-#
-############################################################################################
-
 module TelemetryAnalysis
 
 import Base: @kwdef, print, show

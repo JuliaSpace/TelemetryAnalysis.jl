@@ -60,17 +60,21 @@ Atomically replace `destination` with a same-filesystem temporary file at `sourc
 function _atomic_replace_file(source::String, destination::String)
     # Rename directly within the destination filesystem for atomic replacement semantics.
     error_code = ccall(:jl_fs_rename, Int32, (Cstring, Cstring), source, destination)
+
     if error_code < 0
         # Preserve the operating system error code instead of replacing it with a fallback.
         message = "rename($(repr(source)), $(repr(destination)))"
         Base.uv_error(message, error_code)
     end
+
     return nothing
 end
 
 """
-    save_telemetry(tms::Vector{TelemetryPacket{T}}, prefix::String = string(T))
-        where T<:TelemetrySource -> Nothing
+    save_telemetry(
+        tms::Vector{TelemetryPacket{T}},
+        prefix::String = string(T)
+    ) where T<:TelemetrySource -> Nothing
 
 Save the telemetry packets in `tms` to a file. The filename is built using `prefix` together
 with the first and last packet timestamps:

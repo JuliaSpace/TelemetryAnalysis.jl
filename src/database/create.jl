@@ -59,7 +59,7 @@ end
 
 Add a variable to the `database`.
 
-# Args
+# Arguments
 
 - `database::TelemetryDatabase`: Database.
 - `label::Symbol`: Variable label in the database.
@@ -73,6 +73,7 @@ Add a variable to the `database`.
     (**Default** = `default_raw_transfer_function`)
 
 !!! note
+
     The `position` and `size` can be omitted if the variable is obtained only by the
     processed values of other variables. In this case, the keyword `dependencies` must not
     be `nothing`.

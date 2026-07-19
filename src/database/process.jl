@@ -92,11 +92,14 @@ function process_telemetry_packets(
     database::TelemetryDatabase = get_default_database(),
     show_progress::Bool = true
 ) where T <: TelemetrySource
+
     index = _build_database_index(database)
+
     telemetries = Pair{Symbol, Symbol}[
         label => database.variables[label].default_view
         for label in index.canonical_labels
     ]
+
     return _process_telemetry_packets(
         tmpackets,
         telemetries,
@@ -138,6 +141,7 @@ function process_telemetry_packets(
         end
         for telemetry in telemetries
     ]
+
     return _process_telemetry_packets(
         tmpackets,
         selections,
@@ -167,6 +171,7 @@ function process_telemetry_packets(
     show_progress::Bool = true
 ) where T <: TelemetrySource
     index = _build_database_index(database)
+
     return _process_telemetry_packets(
         tmpackets,
         telemetries,
@@ -188,11 +193,13 @@ function _process_telemetry_packets(
     index::DatabaseIndex,
     show_progress::Bool
 ) where T <: TelemetrySource
-    plan = _build_execution_plan(telemetries, database, index)
+    plan         = _build_execution_plan(telemetries, database, index)
     packet_count = length(tmpackets)
+
     # Allocate packet-indexed columns so threads write disjoint slots without output locks.
-    timestamps = Vector{DateTime}(undef, packet_count)
+    timestamps     = Vector{DateTime}(undef, packet_count)
     output_storage = [Vector{Any}(undef, packet_count) for _ in plan.outputs]
+
     # Use one independently writable flag per packet; packed bits complicate threaded writes.
     validity = Vector{Bool}(undef, packet_count)
     fill!(validity, false)
@@ -246,6 +253,7 @@ function _process_telemetry_packets(
 
     # Filter validity before reading any timestamp or output slot left uninitialized.
     valid_indices = _stable_valid_indices(validity, timestamps)
+
     # Defer DataFrame construction until threaded writes and stable ordering are complete.
     output = _build_output_dataframe(
         timestamps,
@@ -275,13 +283,16 @@ function _execute_node!(
         unpacked_frame,
         node.variable_desc
     )
+
     byte_array = _execute_btf(node, variable_frame)
+
     if !(byte_array isa AbstractVector{UInt8})
         throw(ArgumentError(
             "Bit transfer callback for variable :$(node.label) must return an " *
             "AbstractVector{UInt8}; received $(typeof(byte_array))."
         ))
     end
+
     state.byte_arrays[node_index] = byte_array
 
     stage_mask & _STAGE_RAW == 0 && return nothing
@@ -291,6 +302,7 @@ function _execute_node!(
     stage_mask & _STAGE_PROCESSED == 0 && return nothing
     processed_value = _execute_tf(node, raw_value, state.context)
     state.processed_values[node_index] = processed_value
+
     # Publish processed values under canonical labels for downstream callback contexts.
     state.context[node.label] = (; raw = raw_value, processed = processed_value)
     return nothing
@@ -301,11 +313,9 @@ end
 
 Invoke a node's concretely typed bit transfer callback.
 """
-# Keep the BTF call at a concrete node boundary so callback specialization is retained.
-_execute_btf(
-    node::ExecutionNode{B, R, F},
-    variable_frame
-) where {B, R, F} = node.btf(variable_frame)
+function _execute_btf(node::ExecutionNode{B, R, F}, variable_frame) where {B, R, F}
+    return node.btf(variable_frame)
+end
 
 """
     _execute_rtf(node, byte_array, context)
@@ -350,7 +360,8 @@ Materialize one requested output from packet execution state.
 """
 function _output_value(state::PacketExecutionState, output_spec::OutputSpec)
     node_index = output_spec.node_index
-    view = output_spec.view
+    view       = output_spec.view
+
     # Copy byte output so rows do not retain callback-owned or frame-backed storage.
     if view === :byte_array
         return Vector{UInt8}(state.byte_arrays[node_index])
@@ -371,13 +382,12 @@ end
 Return valid packet indices in stable timestamp order. Avoid sorting when they are already
 ordered.
 """
-function _stable_valid_indices(
-    validity::Vector{Bool},
-    timestamps::Vector{DateTime}
-)
+function _stable_valid_indices(validity::Vector{Bool}, timestamps::Vector{DateTime})
     valid_indices = findall(validity)
+
     # Detect chronological input in one pass and return without allocating a permutation.
     already_sorted = true
+
     for index in 2:length(valid_indices)
         previous = valid_indices[index - 1]
         current = valid_indices[index]
@@ -386,6 +396,7 @@ function _stable_valid_indices(
             break
         end
     end
+
     already_sorted && return valid_indices
 
     # MergeSort preserves original packet order for equal timestamps.
@@ -394,6 +405,7 @@ function _stable_valid_indices(
         by = index -> timestamps[index],
         alg = Base.Sort.MergeSort
     )
+
     return valid_indices[permutation]
 end
 
@@ -410,11 +422,13 @@ function _build_output_dataframe(
 )
     # Gather valid slots before narrowing so uninitialized packet slots are never read.
     output_timestamps = DateTime[timestamps[index] for index in valid_indices]
-    columns = Pair{Symbol, AbstractVector}[:timestamp => output_timestamps]
+    columns           = Pair{Symbol, AbstractVector}[:timestamp => output_timestamps]
+
     for output_index in eachindex(outputs)
         values = Any[storage[output_index][index] for index in valid_indices]
         push!(columns, outputs[output_index].output_name => _narrow_output_column(values))
     end
+
     # Transfer ownership of newly allocated columns without another DataFrame-level copy.
     return DataFrame(columns; copycols = false)
 end
@@ -427,6 +441,7 @@ necessary.
 """
 function _narrow_output_column(values::Vector{Any})
     isempty(values) && return values
+
     # Join types without numeric promotion so original value representations remain intact.
     element_type = Union{}
     for value in values
@@ -438,6 +453,7 @@ function _narrow_output_column(values::Vector{Any})
     for index in eachindex(values)
         narrowed_values[index] = values[index]
     end
+
     return narrowed_values
 end
 

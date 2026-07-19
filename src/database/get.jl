@@ -57,8 +57,7 @@ function _build_database_index(
     for label in canonical_labels
         variable_desc = variables[label]
         label === variable_desc.label || throw(ArgumentError(
-            "Database key :$label does not match descriptor label " *
-            ":$(variable_desc.label)."
+            "Database key :$label does not match descriptor label :$(variable_desc.label)."
         ))
         _validate_variable_description(variable_desc)
     end
@@ -92,16 +91,20 @@ Validate the local invariants of a variable descriptor.
 function _validate_variable_description(variable_desc::TelemetryVariableDescription)
     # Validate local descriptor invariants separately from dictionary-level alias conflicts.
     label = variable_desc.label
+
     label === :timestamp && throw(ArgumentError(
         "The variable label :timestamp is reserved."
     ))
+
     variable_desc.endianess in (:littleendian, :bigendian) || throw(ArgumentError(
         "Invalid endianness :$(variable_desc.endianess) for variable :$label; " *
         "expected :littleendian or :bigendian."
     ))
+
     variable_desc.default_view in _SUPPORTED_VARIABLE_VIEWS || throw(ArgumentError(
         "Unsupported default view :$(variable_desc.default_view) for variable :$label."
     ))
+
     _validate_variable_range(
         variable_desc.position,
         variable_desc.size,
