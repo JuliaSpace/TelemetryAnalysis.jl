@@ -37,9 +37,9 @@ Version 2.0.0
 - ![Feature][badge-feature] We added the support for the raw transfer functions.
 - ![Enhancement][badge-enhancement] We added a progress bar to show the process status.
 - ![Enhancement][badge-enhancement] The variable search functionality provided by the macro
-  `@serchvar` was highly improved. It is now case-insensitive and it also considers the
+  `@searchvar` was highly improved. It is now case-insensitive and it also considers the
   variable labels during searching.
-- ![Enhancement][badge-enhancement] We added a REAMDE.md describing the package.
+- ![Enhancement][badge-enhancement] We added a README.md describing the package.
 
 Version 1.0.0
 -------------

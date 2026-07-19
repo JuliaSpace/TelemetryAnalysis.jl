@@ -5,7 +5,10 @@
 ############################################################################################
 
 """
-    search_variables(pattern::T, database::TelemetryDatabase = get_default_database()) where T<:Union{AbstractString, Regex} -> Nothing
+    search_variables(
+        pattern::T,
+        database::TelemetryDatabase = get_default_database(),
+    ) -> Nothing where T <: Union{AbstractString, Regex}
 
 Search for variables registered in `database` in which their label, alias, or description
 contains `pattern`. `pattern` can be a string or a regex.
@@ -28,7 +31,7 @@ function search_variables(
     cy = (hascolor ? string(crayon"yellow bold") : "")
     cc = (hascolor ? string(crayon"cyan")        : "")
 
-    # Vector to store the keys of the variables that matches the search pattern.
+    # Vector to store the keys of the variables that match the search pattern.
     varnames = Symbol[]
 
     # Check if the comparison must be case-insensitive.
