@@ -185,10 +185,19 @@ struct DatabaseIndex
     canonical_labels::Vector{Symbol}
 end
 
+# Mark execution of the bit transfer function that produces the byte-array stage.
 const _STAGE_BYTE = UInt8(0x01)
+
+# Mark execution of the raw transfer function that consumes the byte-array stage.
 const _STAGE_RAW = UInt8(0x02)
+
+# Mark execution of the transfer function that produces the processed stage.
 const _STAGE_PROCESSED = UInt8(0x04)
+
+# Combine the byte and raw flags because raw output requires both preceding stages.
 const _STAGES_THROUGH_RAW = _STAGE_BYTE | _STAGE_RAW
+
+# Combine every flag because processed output requires the complete callback pipeline.
 const _STAGES_THROUGH_PROCESSED = _STAGES_THROUGH_RAW | _STAGE_PROCESSED
 
 """
