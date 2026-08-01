@@ -6,12 +6,12 @@
 
 """
     search_variables(
-        pattern::T,
-        database::TelemetryDatabase = get_default_database(),
-    ) -> Nothing where T <: Union{AbstractString, Regex}
+        pattern::Union{AbstractString, Regex},
+        database::TelemetryDatabase = get_default_database()
+    ) -> Nothing
 
-Search for variables registered in `database` in which their label, alias, or description
-contains `pattern`. `pattern` can be a string or a regex.
+Search for variables registered in `database` whose label, alias, or description contains
+`pattern`. `pattern` can be a string or a regex.
 
 !!! note
 
@@ -114,8 +114,8 @@ end
 """
     @searchvar(pattern)
 
-Search variables in the default database in which their label, alias, or description
-contains `pattern`. For more information, see [`search_variables`](@ref).
+Search variables in the default database whose label, alias, or description contains
+`pattern`. For more information, see [`search_variables`](@ref).
 """
 macro searchvar(pattern)
     if (pattern isa Symbol)
