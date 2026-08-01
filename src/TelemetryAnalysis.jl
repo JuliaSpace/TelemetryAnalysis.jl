@@ -21,7 +21,6 @@ export d, h, m, s
 
 @reexport using Crayons
 @reexport using Dates
-@reexport using SIMD
 
 ############################################################################################
 #                                          Types                                           #
