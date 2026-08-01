@@ -130,15 +130,7 @@ function process_telemetry_packets(
 ) where T <: TelemetrySource
     index = _build_database_index(database)
     selections = Pair{Symbol, Symbol}[
-        if telemetry isa Pair{Symbol, Symbol}
-            telemetry
-        else
-            telemetry => _get_variable_description(
-                telemetry,
-                database,
-                index
-            ).default_view
-        end
+        _normalize_telemetry_selection(telemetry, database, index)
         for telemetry in telemetries
     ]
 
@@ -179,6 +171,32 @@ function process_telemetry_packets(
         index,
         show_progress
     )
+end
+
+"""
+    _normalize_telemetry_selection(telemetry, database, index) -> Pair{Symbol, Symbol}
+
+Normalize one requested telemetry selection to a `label => view` pair. A `Symbol` selects
+the variable default view, whereas a `Pair{Symbol, Symbol}` is returned unchanged. Any other
+object is rejected with an `ArgumentError`.
+"""
+function _normalize_telemetry_selection(
+    telemetry,
+    database::TelemetryDatabase,
+    index::DatabaseIndex
+)
+    telemetry isa Pair{Symbol, Symbol} && return telemetry
+
+    if telemetry isa Symbol
+        return telemetry =>
+            _get_variable_description(telemetry, database, index).default_view
+    end
+
+    # Reject unsupported selection objects clearly instead of leaking a MethodError.
+    throw(ArgumentError(
+        "Telemetry selections must be a Symbol or a Pair{Symbol, Symbol}; received " *
+        "$(repr(telemetry))."
+    ))
 end
 
 """

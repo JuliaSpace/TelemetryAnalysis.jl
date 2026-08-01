@@ -401,6 +401,12 @@ end
         TelemetryPacket{TestSource}[], [:value => :unknown]; database,
         show_progress = false)
 
+    # Malformed selection objects must fail clearly instead of raising MethodError.
+    @test_throws ArgumentError process_telemetry_packets(
+        [packet()], Any[:value => "raw"]; database, show_progress = false)
+    @test_throws ArgumentError process_telemetry_packets(
+        [packet()], Any["value"]; database, show_progress = false)
+
     invalid_default = test_database()
     add_identity_variable!(invalid_default, :value)
     descriptor = invalid_default.variables[:value]
