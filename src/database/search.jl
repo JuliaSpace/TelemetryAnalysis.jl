@@ -25,12 +25,6 @@ function search_variables(
     pattern::T,
     database::TelemetryDatabase = get_default_database()
 ) where T<:Union{AbstractString, Regex}
-    # Prepare the crayons to highlight the output if `stdout` supports it.
-    hascolor = get(stdout, :color, false)
-    cr = (hascolor ? string(crayon"reset")       : "")
-    cy = (hascolor ? string(crayon"yellow bold") : "")
-    cc = (hascolor ? string(crayon"cyan")        : "")
-
     # Vector to store the keys of the variables that match the search pattern.
     varnames = Symbol[]
 
