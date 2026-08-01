@@ -1,6 +1,48 @@
 TelemetryAnalysis.jl Changelog
 ==============================
 
+Version 3.0.0
+-------------
+
+- ![BREAKING][badge-breaking] `TelemetryPacket.metadata` now defaults to `nothing` instead
+  of an empty dictionary. Callers that require mutable metadata must pass a
+  `Dict{String, Any}` explicitly.
+- ![BREAKING][badge-breaking] SIMD.jl is no longer a dependency and is no longer
+  re-exported.
+- ![BREAKING][badge-breaking] The misspelled `endianess` field and keyword were renamed to
+  `endianness` in `TelemetryVariableDescription` and `add_variable!`.
+- ![Feature][badge-feature] We added the metadata helpers `hasmetadata`, `getmetadata`, and
+  `with_metadata`.
+- ![Enhancement][badge-enhancement] `byte_array_to_binary` and `byte_array_to_hex` write
+  their output directly, drastically reducing allocations.
+- ![Enhancement][badge-enhancement] Packet processing now builds a fresh execution plan
+  before threaded work, executes each byte, raw, and processed stage at most once per
+  packet, and writes lock-free packet-indexed output columns, reducing processing time and
+  allocations. Output rows are sorted by timestamp, and equal timestamps keep the original
+  packet order.
+- ![Enhancement][badge-enhancement] `add_variable!` validates the new variable
+  incrementally instead of rebuilding the whole database index, making database
+  construction much faster for large databases.
+- ![Enhancement][badge-enhancement] Packet processing allocations were further reduced by
+  reusing node slot buffers across packets, sorting valid indices in place, and gathering
+  output columns in a single pass.
+- ![Bugfix][badge-bugfix] The variable table printed by `@searchvar` is no longer cropped
+  vertically.
+- ![Bugfix][badge-bugfix] `tf_uint64` now decodes all eight bytes, and `checkbit` supports
+  signed and arbitrary-precision integers while validating the bit position.
+- ![Bugfix][badge-bugfix] The default unpack function now returns the packet data, full
+  telemetry dumps update the default packet collection, quantity intervals are converted
+  exactly to milliseconds, and gzip persistence uses exception-safe cleanup with atomic
+  file replacement.
+- ![Bugfix][badge-bugfix] Malformed telemetry selections, inexact quantity intervals,
+  cyclic dependencies, and invalid `analyze_byte_array` orders now throw a descriptive
+  `ArgumentError`.
+- ![Bugfix][badge-bugfix] ProgressMeter.jl v1.7 or later is now required so threaded
+  progress updates are thread-safe.
+- ![Info][badge-info] The package now has a test suite and a benchmark environment.
+- ![Info][badge-info] The README now documents the source API together with the
+  processing, metadata, interval, and persistence contracts.
+
 Version 2.1.0
 -------------
 
@@ -46,9 +88,9 @@ Version 1.0.0
 
 - Initial stable version.
 
-[badge-breaking]: https://img.shields.io/badge/BREAKING-red.svg
-[badge-deprecation]: https://img.shields.io/badge/Deprecation-orange.svg
-[badge-feature]: https://img.shields.io/badge/Feature-green.svg
-[badge-enhancement]: https://img.shields.io/badge/Enhancement-blue.svg
-[badge-bugfix]: https://img.shields.io/badge/Bugfix-purple.svg
-[badge-info]: https://img.shields.io/badge/Info-gray.svg
+[badge-breaking]: https://img.shields.io/badge/Breaking-DC2626?style=flat-square
+[badge-deprecation]: https://img.shields.io/badge/Deprecation-D97706?style=flat-square
+[badge-feature]: https://img.shields.io/badge/Feature-16A34A?style=flat-square
+[badge-enhancement]: https://img.shields.io/badge/Enhancement-0284C7?style=flat-square
+[badge-bugfix]: https://img.shields.io/badge/Bugfix-DB2777?style=flat-square
+[badge-info]: https://img.shields.io/badge/Info-475569?style=flat-square
