@@ -88,24 +88,22 @@ destination. The output remains Julia- and type-layout-dependent trusted data, n
 cross-version interchange format.
 """
 function save_telemetry(
-    tms::Vector{TelemetryPacket{T}},
-    prefix::String = string(T)
-) where T <: TelemetrySource
+    tms::Vector{TelemetryPacket{T}}, prefix::String = string(T)
+) where {T <: TelemetrySource}
     # TODO: Should we use JLD instead?
 
     if isempty(tms)
         @warn "The telemetry vector is empty!"
     else
         t₀ = Dates.format(first(tms).timestamp, "yyyy-mm-ddTHH-MM-SS")
-        t₁ = Dates.format(last(tms).timestamp,  "yyyy-mm-ddTHH-MM-SS")
+        t₁ = Dates.format(last(tms).timestamp, "yyyy-mm-ddTHH-MM-SS")
 
         filename = prefix * "_" * t₀ * "_" * t₁ * ".ser.gz"
 
         @info "Saving the telemetry to the file $filename..."
 
         temporary_filename, file_stream = mktemp(
-            dirname(abspath(filename));
-            cleanup = false,
+            dirname(abspath(filename)); cleanup = false
         )
         stream = nothing
         moved = false

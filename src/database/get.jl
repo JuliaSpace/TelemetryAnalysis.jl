@@ -56,9 +56,11 @@ function _build_database_index(
     # Validate descriptors before aliases so malformed canonical entries fail first.
     for label in canonical_labels
         variable_desc = variables[label]
-        label === variable_desc.label || throw(ArgumentError(
-            "Database key :$label does not match descriptor label :$(variable_desc.label)."
-        ))
+        label === variable_desc.label || throw(
+            ArgumentError(
+                "Database key :$label does not match descriptor label :$(variable_desc.label).",
+            ),
+        )
         _validate_variable_description(variable_desc)
     end
 
@@ -68,15 +70,14 @@ function _build_database_index(
         alias = variables[label].alias
         isnothing(alias) && continue
 
-        alias === :timestamp && throw(ArgumentError(
-            "The alias :timestamp is reserved."
-        ))
-        alias in canonical_set && throw(ArgumentError(
-            "Alias :$alias conflicts with variable label :$alias."
-        ))
-        haskey(aliases, alias) && throw(ArgumentError(
-            "Alias :$alias is ambiguous between variables :$(aliases[alias]) and :$label."
-        ))
+        alias === :timestamp && throw(ArgumentError("The alias :timestamp is reserved."))
+        alias in canonical_set &&
+            throw(ArgumentError("Alias :$alias conflicts with variable label :$alias."))
+        haskey(aliases, alias) && throw(
+            ArgumentError(
+                "Alias :$alias is ambiguous between variables :$(aliases[alias]) and :$label.",
+            ),
+        )
         aliases[alias] = label
     end
 
@@ -92,24 +93,24 @@ function _validate_variable_description(variable_desc::TelemetryVariableDescript
     # Validate local descriptor invariants separately from dictionary-level alias conflicts.
     label = variable_desc.label
 
-    label === :timestamp && throw(ArgumentError(
-        "The variable label :timestamp is reserved."
-    ))
+    label === :timestamp &&
+        throw(ArgumentError("The variable label :timestamp is reserved."))
 
-    variable_desc.endianness in (:littleendian, :bigendian) || throw(ArgumentError(
-        "Invalid endianness :$(variable_desc.endianness) for variable :$label; " *
-        "expected :littleendian or :bigendian."
-    ))
+    variable_desc.endianness in (:littleendian, :bigendian) || throw(
+        ArgumentError(
+            "Invalid endianness :$(variable_desc.endianness) for variable :$label; " *
+            "expected :littleendian or :bigendian.",
+        ),
+    )
 
-    variable_desc.default_view in _SUPPORTED_VARIABLE_VIEWS || throw(ArgumentError(
-        "Unsupported default view :$(variable_desc.default_view) for variable :$label."
-    ))
+    variable_desc.default_view in _SUPPORTED_VARIABLE_VIEWS || throw(
+        ArgumentError(
+            "Unsupported default view :$(variable_desc.default_view) for variable :$label.",
+        ),
+    )
 
     _validate_variable_range(
-        variable_desc.position,
-        variable_desc.size,
-        variable_desc.dependencies,
-        label
+        variable_desc.position, variable_desc.size, variable_desc.dependencies, label
     )
     return nothing
 end
@@ -123,15 +124,19 @@ function _validate_variable_range(position, size, dependencies, label::Symbol)
     # Reserve zero position and size exclusively for dependency-backed derived variables.
     if iszero(position) && iszero(size)
         if isnothing(dependencies) || isempty(dependencies)
-            throw(ArgumentError(
-                "Derived-only variable :$label must have at least one dependency."
-            ))
+            throw(
+                ArgumentError(
+                    "Derived-only variable :$label must have at least one dependency."
+                ),
+            )
         end
     elseif position <= 0 || size <= 0
-        throw(ArgumentError(
-            "Frame-backed variable :$label must have positive position and size; " *
-            "derived-only variables must use position 0 and size 0."
-        ))
+        throw(
+            ArgumentError(
+                "Frame-backed variable :$label must have positive position and size; " *
+                "derived-only variables must use position 0 and size 0.",
+            ),
+        )
     end
 
     return nothing
@@ -143,9 +148,7 @@ end
 Resolve a canonical label or alias using an already validated ephemeral index.
 """
 function _get_variable_description(
-    label::Symbol,
-    database::TelemetryDatabase,
-    index::DatabaseIndex
+    label::Symbol, database::TelemetryDatabase, index::DatabaseIndex
 )
     # Prefer canonical labels, then resolve aliases through the validated ephemeral index.
     canonical_label = if haskey(database.variables, label)

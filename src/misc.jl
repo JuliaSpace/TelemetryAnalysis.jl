@@ -22,13 +22,10 @@ Print a table containing binary, decimal, and hexadecimal representations of `by
     two nibbles. (**Default** = `true`)
 """
 function analyze_byte_array(
-    byte_array::AbstractVector{UInt8};
-    order::Symbol = :descending,
-    binarysep::Bool = true
+    byte_array::AbstractVector{UInt8}; order::Symbol = :descending, binarysep::Bool = true
 )
-    order in (:ascending, :descending) || throw(ArgumentError(
-        "Invalid order :$order; expected :ascending or :descending."
-    ))
+    order in (:ascending, :descending) ||
+        throw(ArgumentError("Invalid order :$order; expected :ascending or :descending."))
 
     num_bytes = length(byte_array)
 
@@ -40,20 +37,20 @@ function analyze_byte_array(
 
     data = Matrix{String}(undef, 3, num_bytes)
 
-    for i = 1:num_bytes
+    for i in 1:num_bytes
         byte = byte_array[i - 1 + begin]
 
-        hex_str = "0x" * (string(byte, base = 16, pad = 2) |> uppercase)
+        hex_str = "0x" * (string(byte; base = 16, pad = 2) |> uppercase)
         dec_str = string(byte)
 
         if binarysep
-            aux = string(byte, base =  2, pad = 8)
+            aux = string(byte; base = 2, pad = 8)
 
             # Since byte is `UInt8`, `aux` will always have 8 characters.
             bin_str = "0b" * aux[1:4] * "." * aux[5:8]
 
         else
-            bin_str = "0b" * (string(byte, base =  2, pad = 8))
+            bin_str = "0b" * (string(byte; base = 2, pad = 8))
         end
 
         if order == :descending
@@ -67,20 +64,19 @@ function analyze_byte_array(
         end
     end
 
-    table_format = TextTableFormat(
-        ;
+    table_format = TextTableFormat(;
         @text__no_horizontal_lines,
         @text__no_vertical_lines,
         horizontal_line_after_column_labels  = true,
-        vertical_line_after_row_label_column = true
+        vertical_line_after_row_label_column = true,
     )
 
-    pretty_table(
+    return pretty_table(
         data;
         column_labels  = column_labels,
         row_labels     = ["Binary", "Decimal", "Hexadecimal"],
         stubhead_label = "Byte #",
-        table_format   = table_format
+        table_format   = table_format,
     )
 end
 
@@ -132,12 +128,13 @@ end
 
 Check if the `bit` in `raw` is set. The least significant bit is 1.
 """
-function checkbit(raw::T, bit::Integer) where T<:Integer
+function checkbit(raw::T, bit::Integer) where {T <: Integer}
     bit >= 1 || throw(ArgumentError("bit position must be at least 1; received $bit."))
     if isbitstype(T)
         width = 8sizeof(T)
-        bit <= width || throw(ArgumentError(
-            "bit position must not exceed $width for $T; received $bit."))
+        bit <= width || throw(
+            ArgumentError("bit position must not exceed $width for $T; received $bit.")
+        )
     end
     mask = one(raw) << (bit - 1)
     return (raw & mask) != zero(raw)

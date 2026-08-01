@@ -14,7 +14,6 @@ Register `source` as interactive. Hence, it will be listed as an option if the u
 `init_telemetry_source()`.
 """
 macro register_interactive_source(source)
-
     expr = :(
         if $(esc(source)) <: TelemetrySource
             if $(esc(source)) ∉ _INTERACTIVE_SOURCES
@@ -63,7 +62,7 @@ function init_telemetry_source()
     return init_telemetry_source(_INTERACTIVE_SOURCES[choice])
 end
 
-function init_telemetry_source(::Type{T}, vargs...; kwargs...) where T<:TelemetrySource
+function init_telemetry_source(::Type{T}, vargs...; kwargs...) where {T <: TelemetrySource}
     @info "Initializing a telemetry source of type $T..."
 
     source = _api_init_telemetry_source(T, vargs...; kwargs...)::Union{Nothing, T}
@@ -82,7 +81,7 @@ end
 
 Set the default telemetry source to `source`.
 """
-function set_default_telemetry_source!(source::T) where T<:TelemetrySource
+function set_default_telemetry_source!(source::T) where {T <: TelemetrySource}
     _DEFAULT_TELEMETRY_SOURCE[] = source
     return nothing
 end

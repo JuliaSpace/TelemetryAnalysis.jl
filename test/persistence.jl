@@ -43,29 +43,26 @@ const INJECTED_SAVE_STREAM = Ref{Any}()
 
 # Capture the load stream and inject a named-key failure to test propagation and cleanup.
 function Serialization.deserialize(
-    serializer::Serialization.AbstractSerializer,
-    ::Type{InjectedLoadFailure},
+    serializer::Serialization.AbstractSerializer, ::Type{InjectedLoadFailure}
 )
     INJECTED_LOAD_STREAM[] = serializer.io
-    throw(KeyError((; name = "InjectedLoadFailure")))
+    return throw(KeyError((; name = "InjectedLoadFailure")))
 end
 
 # Capture the load stream and inject a plain-key failure that has no `name` property.
 function Serialization.deserialize(
-    serializer::Serialization.AbstractSerializer,
-    ::Type{InjectedPlainKeyLoadFailure},
+    serializer::Serialization.AbstractSerializer, ::Type{InjectedPlainKeyLoadFailure}
 )
     INJECTED_PLAIN_KEY_LOAD_STREAM[] = serializer.io
-    throw(KeyError(:plain_key))
+    return throw(KeyError(:plain_key))
 end
 
 # Capture the save stream and fail serialization to test atomic preservation and cleanup.
 function Serialization.serialize(
-    serializer::Serialization.AbstractSerializer,
-    ::InjectedSaveFailure,
+    serializer::Serialization.AbstractSerializer, ::InjectedSaveFailure
 )
     INJECTED_SAVE_STREAM[] = serializer.io
-    error("injected serialization failure")
+    return error("injected serialization failure")
 end
 
 @testset "Persistence" begin
@@ -74,18 +71,13 @@ end
         packets = [
             packet(UInt8[0xAA]; timestamp),
             packet(UInt8[0xBB]; timestamp, metadata = Dict{String, Any}()),
-            packet(
-                UInt8[0xCC];
-                timestamp,
-                metadata = Dict{String, Any}("mode" => "new"),
-            ),
+            packet(UInt8[0xCC]; timestamp, metadata = Dict{String, Any}("mode" => "new")),
         ]
         cd(directory) do
             @test save_telemetry(packets, "roundtrip") === nothing
         end
         filename = joinpath(
-            directory,
-            "roundtrip_2024-02-03T04-05-06_2024-02-03T04-05-06.ser.gz",
+            directory, "roundtrip_2024-02-03T04-05-06_2024-02-03T04-05-06.ser.gz"
         )
         @test isfile(filename)
         loaded = load_telemetry(filename)
@@ -139,8 +131,7 @@ end
         @test !isopen(INJECTED_PLAIN_KEY_LOAD_STREAM[])
 
         replacement_destination = joinpath(
-            directory,
-            "replace_2024-02-03T04-05-06_2024-02-03T04-05-06.ser.gz",
+            directory, "replace_2024-02-03T04-05-06_2024-02-03T04-05-06.ser.gz"
         )
         write(replacement_destination, "old destination")
         cd(directory) do
@@ -153,14 +144,15 @@ end
         @test isempty(replacement[2].metadata)
         @test last(replacement).metadata == Dict{String, Any}("mode" => "new")
 
-        failed_packets = [TelemetryPacket{TestSource}(;
-            timestamp = DateTime(2024, 2, 3, 4, 5, 6),
-            data = UInt8[0xBB],
-            metadata = Dict{String, Any}("failure" => InjectedSaveFailure()),
-        )]
+        failed_packets = [
+            TelemetryPacket{TestSource}(;
+                timestamp = DateTime(2024, 2, 3, 4, 5, 6),
+                data = UInt8[0xBB],
+                metadata = Dict{String, Any}("failure" => InjectedSaveFailure()),
+            ),
+        ]
         destination = joinpath(
-            directory,
-            "atomic_2024-02-03T04-05-06_2024-02-03T04-05-06.ser.gz",
+            directory, "atomic_2024-02-03T04-05-06_2024-02-03T04-05-06.ser.gz"
         )
         write(destination, "original destination")
         files_before_failure = readdir(directory)

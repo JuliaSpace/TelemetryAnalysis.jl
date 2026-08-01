@@ -37,9 +37,8 @@ function generate_fixture(root = @__DIR__)
     source = TelemetryAnalysis.LegacyFixtureSource
     metadata_type = fieldtype(TelemetryPacket{source}, :metadata)
     # Refuse to mislabel post-P16 packet layouts as legacy fixtures.
-    metadata_type === Dict{String, Any} || error(
-        "Refusing to generate a legacy fixture with the post-P16 packet layout.",
-    )
+    metadata_type === Dict{String, Any} ||
+        error("Refusing to generate a legacy fixture with the post-P16 packet layout.")
 
     packets = [
         TelemetryPacket{source}(; timestamp = DateTime(2020), data = UInt8[0x01]),

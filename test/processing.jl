@@ -39,21 +39,24 @@ end
     database = create_telemetry_database("default unpack")
     add_identity_variable!(database, :value)
 
-    output = process_telemetry_packets([packet()], [:value]; database,
-        show_progress = false)
+    output = process_telemetry_packets(
+        [packet()], [:value]; database, show_progress = false
+    )
     @test output.value == [UInt8[1]]
 
     empty_packets = TelemetryPacket{TestSource}[]
-    selected = process_telemetry_packets(empty_packets, [:value]; database,
-        show_progress = false)
+    selected = process_telemetry_packets(
+        empty_packets, [:value]; database, show_progress = false
+    )
     @test isempty(selected)
     @test propertynames(selected) == [:timestamp, :value]
     @test eltype(selected.timestamp) === DateTime
     @test eltype(selected.value) === Any
 
     add_identity_variable!(database, :raw_value; default_view = :raw)
-    default_output = process_telemetry_packets(empty_packets; database,
-        show_progress = false)
+    default_output = process_telemetry_packets(
+        empty_packets; database, show_progress = false
+    )
     @test isempty(default_output)
     @test propertynames(default_output) == [:timestamp, :raw_value_raw, :value]
     @test eltype.(eachcol(default_output)) == [DateTime, Any, Any]
@@ -81,11 +84,10 @@ end
     end
     add_variable!(database, :value, 1, 1, tf, btf, rtf)
     packets = [
-        packet(UInt8[mod1(index, 251)]; timestamp = DateTime(2024) + Millisecond(index))
-        for index in 1:64
+        packet(UInt8[mod1(index, 251)]; timestamp = DateTime(2024) + Millisecond(index)) for
+        index in 1:64
     ]
-    output = process_telemetry_packets(packets, [:value]; database,
-        show_progress = false)
+    output = process_telemetry_packets(packets, [:value]; database, show_progress = false)
     @test output.value == UInt8[mod1(index, 251) for index in 1:64]
     @test (btf_count[], rtf_count[], tf_count[]) == (64, 64, 64)
 end
@@ -108,30 +110,31 @@ end
             Int(first(bytes))
         end
         # Count processed-stage execution and accumulate the preceding chain result.
-        tf = (raw, context) -> begin
-            counts[:tf][label] = get(counts[:tf], label, 0) + 1
-            isnothing(dependencies) ? raw : raw + context[first(dependencies)].processed
-        end
+        tf =
+            (raw, context) -> begin
+                counts[:tf][label] = get(counts[:tf], label, 0) + 1
+                isnothing(dependencies) ? raw : raw + context[first(dependencies)].processed
+            end
         add_variable!(database, label, index, 1, tf, btf, rtf; dependencies)
     end
 
     labels = [Symbol(:v, index) for index in 1:6]
     frame = UInt8[1, 2, 3, 4, 5, 6]
-    forward = process_telemetry_packets([packet(frame)], labels; database,
-        show_progress = false)
+    forward = process_telemetry_packets(
+        [packet(frame)], labels; database, show_progress = false
+    )
     @test forward.v6 == [21]
     @test all(
-        counts[stage] == Dict(label => 1 for label in labels)
-        for stage in keys(counts)
+        counts[stage] == Dict(label => 1 for label in labels) for stage in keys(counts)
     )
 
     foreach(empty!, values(counts))
-    reverse_output = process_telemetry_packets([packet(frame)], reverse(labels); database,
-        show_progress = false)
+    reverse_output = process_telemetry_packets(
+        [packet(frame)], reverse(labels); database, show_progress = false
+    )
     @test reverse_output.v6 == [21]
     @test all(
-        counts[stage] == Dict(label => 1 for label in labels)
-        for stage in keys(counts)
+        counts[stage] == Dict(label => 1 for label in labels) for stage in keys(counts)
     )
 
     callback_count = Ref(0)
@@ -141,13 +144,10 @@ end
         callback_count[] += 1
         bytes
     end
-    add_variable!(cyclic, :a, 1, 1, identity, cyclic_btf;
-        dependencies = [:b])
-    add_variable!(cyclic, :b, 1, 1, identity, cyclic_btf;
-        dependencies = [:a])
+    add_variable!(cyclic, :a, 1, 1, identity, cyclic_btf; dependencies = [:b])
+    add_variable!(cyclic, :b, 1, 1, identity, cyclic_btf; dependencies = [:a])
     cycle_error = try
-        process_telemetry_packets([packet()], [:a]; database = cyclic,
-            show_progress = false)
+        process_telemetry_packets([packet()], [:a]; database = cyclic, show_progress = false)
         nothing
     catch error
         error
@@ -157,11 +157,9 @@ end
     @test callback_count[] == 0
 
     missing = test_database()
-    add_variable!(missing, :a, 1, 1, identity, cyclic_btf;
-        dependencies = [:absent])
+    add_variable!(missing, :a, 1, 1, identity, cyclic_btf; dependencies = [:absent])
     missing_error = try
-        process_telemetry_packets([packet()], [:a]; database = missing,
-            show_progress = false)
+        process_telemetry_packets([packet()], [:a]; database = missing, show_progress = false)
         nothing
     catch error
         error
@@ -176,16 +174,17 @@ end
     # Read the initially declared dependency from the canonical callback context.
     initial_tf = (raw, context) -> context[:base].processed
     add_variable!(cached, :derived, 3, 1, initial_tf; dependencies = [:base])
-    initial = process_telemetry_packets([packet()], [:derived]; database = cached,
-        show_progress = false)
+    initial = process_telemetry_packets(
+        [packet()], [:derived]; database = cached, show_progress = false
+    )
     @test initial.derived == [UInt8[1]]
     # Read the replacement dependency after redefining the derived variable.
     replacement_tf = (raw, context) -> context[:replacement].processed
-    add_variable!(cached, :derived, 3, 1, replacement_tf;
-        dependencies = [:replacement])
+    add_variable!(cached, :derived, 3, 1, replacement_tf; dependencies = [:replacement])
 
-    replaced = process_telemetry_packets([packet()], [:derived]; database = cached,
-        show_progress = false)
+    replaced = process_telemetry_packets(
+        [packet()], [:derived]; database = cached, show_progress = false
+    )
     @test replaced.derived == [UInt8[2]]
 
     descriptor = cached.variables[:derived]
@@ -200,11 +199,12 @@ end
         descriptor.size,
         initial_tf,
         descriptor.btf,
-        descriptor.rtf
+        descriptor.rtf,
     )
     cached._variable_dependencies[:derived] = [:replacement]
-    mutated = process_telemetry_packets([packet()], [:derived]; database = cached,
-        show_progress = false)
+    mutated = process_telemetry_packets(
+        [packet()], [:derived]; database = cached, show_progress = false
+    )
     @test mutated.derived == [UInt8[1]]
 end
 
@@ -230,18 +230,19 @@ end
     # Reset all stage counters between independent view-mask requests.
     reset_counts! = () -> foreach(stage -> counts[stage] = 0, keys(counts))
 
-    process_telemetry_packets([packet()], [:value => :byte_array]; database,
-        show_progress = false)
+    process_telemetry_packets(
+        [packet()], [:value => :byte_array]; database, show_progress = false
+    )
     @test counts == Dict(:btf => 1, :rtf => 0, :tf => 0)
 
     reset_counts!()
-    process_telemetry_packets([packet()], [:value => :raw]; database,
-        show_progress = false)
+    process_telemetry_packets([packet()], [:value => :raw]; database, show_progress = false)
     @test counts == Dict(:btf => 1, :rtf => 1, :tf => 0)
 
     reset_counts!()
-    process_telemetry_packets([packet()], [:value => :processed]; database,
-        show_progress = false)
+    process_telemetry_packets(
+        [packet()], [:value => :processed]; database, show_progress = false
+    )
     @test counts == Dict(:btf => 1, :rtf => 1, :tf => 1)
 
     reset_counts!()
@@ -249,7 +250,7 @@ end
         [packet()],
         [:value => :byte_array, :alias => :raw, :value => :processed];
         database,
-        show_progress = false
+        show_progress = false,
     )
     @test counts == Dict(:btf => 1, :rtf => 1, :tf => 1)
     @test propertynames(output) == [:timestamp, :value_byte_array, :alias_raw, :value]
@@ -258,12 +259,7 @@ end
 @testset "Shared dependencies and callback contexts" begin
     counts = Dict(stage => Dict{Symbol, Int}() for stage in (:btf, :rtf, :tf))
     database = test_database()
-    graph = Dict(
-        :a => nothing,
-        :b => [:a],
-        :c => [:a],
-        :d => [:b, :c],
-    )
+    graph = Dict(:a => nothing, :b => [:a], :c => [:a], :d => [:b, :c])
 
     for (index, label) in enumerate((:a, :b, :c, :d))
         dependencies = graph[label]
@@ -278,31 +274,41 @@ end
             Int(first(bytes))
         end
         # Count processed-stage execution and combine all declared dependencies.
-        tf = (raw, context) -> begin
-            counts[:tf][label] = get(counts[:tf], label, 0) + 1
-            if isnothing(dependencies)
-                raw
-            else
-                raw + sum(context[dependency].processed for dependency in dependencies)
+        tf =
+            (raw, context) -> begin
+                counts[:tf][label] = get(counts[:tf], label, 0) + 1
+                if isnothing(dependencies)
+                    raw
+                else
+                    raw + sum(context[dependency].processed for dependency in dependencies)
+                end
             end
-        end
         add_variable!(database, label, index, 1, tf, btf, rtf; dependencies)
     end
 
-    output = process_telemetry_packets([packet(UInt8[1, 2, 3, 4])], [:d];
-        database, show_progress = false)
+    output = process_telemetry_packets(
+        [packet(UInt8[1, 2, 3, 4])], [:d]; database, show_progress = false
+    )
     @test output.d == [11]
     @test all(
-        counts[stage] == Dict(label => 1 for label in (:a, :b, :c, :d))
-        for stage in keys(counts)
+        counts[stage] == Dict(label => 1 for label in (:a, :b, :c, :d)) for
+        stage in keys(counts)
     )
 
     contexts = Any[]
     context_keys = Set{Symbol}[]
     context_lock = ReentrantLock()
     alias_database = test_database()
-    add_variable!(alias_database, :base, 1, 1, identity,
-        default_bit_transfer_function, first; alias = :source)
+    add_variable!(
+        alias_database,
+        :base,
+        1,
+        1,
+        identity,
+        default_bit_transfer_function,
+        first;
+        alias = :source,
+    )
     # Record canonical dependency keys observed by raw callbacks.
     context_rtf = (bytes, context) -> begin
         lock(context_lock) do
@@ -318,15 +324,24 @@ end
         end
         raw
     end
-    add_variable!(alias_database, :derived, 2, 1, context_tf,
-        default_bit_transfer_function, context_rtf; alias = :result,
-        dependencies = [:source])
+    add_variable!(
+        alias_database,
+        :derived,
+        2,
+        1,
+        context_tf,
+        default_bit_transfer_function,
+        context_rtf;
+        alias = :result,
+        dependencies = [:source],
+    )
     packets = [
         packet(UInt8[1, 2]; timestamp = DateTime(2024)),
         packet(UInt8[3, 4]; timestamp = DateTime(2024) + Second(1)),
     ]
-    alias_output = process_telemetry_packets(packets, [:result];
-        database = alias_database, show_progress = false)
+    alias_output = process_telemetry_packets(
+        packets, [:result]; database = alias_database, show_progress = false
+    )
     @test alias_output.result == [3, 7]
     @test length(contexts) == 2
     @test contexts[1] !== contexts[2]
@@ -335,8 +350,7 @@ end
 
 @testset "Concrete execution nodes" begin
     database = test_database()
-    add_variable!(database, :value, 1, 1, identity,
-        default_bit_transfer_function, first)
+    add_variable!(database, :value, 1, 1, identity, default_bit_transfer_function, first)
     descriptor = database.variables[:value]
     node = TelemetryAnalysis._execution_node(descriptor)
 
@@ -348,11 +362,7 @@ end
     @test (@inferred TelemetryAnalysis._execute_btf(node, frame)) === frame
     state = TelemetryAnalysis.PacketExecutionState(1)
     @test (@inferred TelemetryAnalysis._execute_node!(
-        state,
-        node,
-        UInt8[1],
-        1,
-        TelemetryAnalysis._STAGES_THROUGH_PROCESSED
+        state, node, UInt8[1], 1, TelemetryAnalysis._STAGES_THROUGH_PROCESSED
     )) === nothing
     @test state.context[:value] == (; raw = 0x01, processed = 0x01)
 end
@@ -364,8 +374,12 @@ end
 
     for view in (:byte_array, :raw, :processed)
         error = try
-            process_telemetry_packets([packet()], [:invalid => view];
-                database = invalid_database, show_progress = false)
+            process_telemetry_packets(
+                [packet()],
+                [:invalid => view];
+                database = invalid_database,
+                show_progress = false,
+            )
             nothing
         catch exception
             exception
@@ -385,7 +399,7 @@ end
         [packet(UInt8[2, 3])],
         [:value => :byte_array, :value => :processed];
         database = valid_database,
-        show_progress = false
+        show_progress = false,
     )
     @test only(output.value_byte_array) isa Vector{UInt8}
     @test output.value == UInt8[2]
@@ -396,16 +410,19 @@ end
     add_identity_variable!(database, :value)
 
     @test_throws ArgumentError process_telemetry_packets(
-        [packet()], [:value => :unknown]; database, show_progress = false)
+        [packet()], [:value => :unknown]; database, show_progress = false
+    )
     @test_throws ArgumentError process_telemetry_packets(
-        TelemetryPacket{TestSource}[], [:value => :unknown]; database,
-        show_progress = false)
+        TelemetryPacket{TestSource}[], [:value => :unknown]; database, show_progress = false
+    )
 
     # Malformed selection objects must fail clearly instead of raising MethodError.
     @test_throws ArgumentError process_telemetry_packets(
-        [packet()], Any[:value => "raw"]; database, show_progress = false)
+        [packet()], Any[:value => "raw"]; database, show_progress = false
+    )
     @test_throws ArgumentError process_telemetry_packets(
-        [packet()], Any["value"]; database, show_progress = false)
+        [packet()], Any["value"]; database, show_progress = false
+    )
 
     invalid_default = test_database()
     add_identity_variable!(invalid_default, :value)
@@ -421,13 +438,17 @@ end
         descriptor.size,
         descriptor.tf,
         descriptor.btf,
-        descriptor.rtf
+        descriptor.rtf,
     )
     @test_throws ArgumentError process_telemetry_packets(
-        [packet()], [:value]; database = invalid_default, show_progress = false)
+        [packet()], [:value]; database = invalid_default, show_progress = false
+    )
     @test_throws ArgumentError process_telemetry_packets(
-        TelemetryPacket{TestSource}[], [:value]; database = invalid_default,
-        show_progress = false)
+        TelemetryPacket{TestSource}[],
+        [:value];
+        database = invalid_default,
+        show_progress = false,
+    )
 
     invalid_endianness = test_database()
     add_identity_variable!(invalid_endianness, :value)
@@ -443,15 +464,19 @@ end
         descriptor.size,
         descriptor.tf,
         descriptor.btf,
-        descriptor.rtf
+        descriptor.rtf,
     )
     @test_throws ArgumentError process_telemetry_packets(
-        [packet()], [:value]; database = invalid_endianness, show_progress = false)
+        [packet()], [:value]; database = invalid_endianness, show_progress = false
+    )
 
     add_identity_variable!(database, :value_raw)
     @test_throws ArgumentError process_telemetry_packets(
-        [packet()], [:value => :raw, :value_raw => :processed]; database,
-        show_progress = false)
+        [packet()],
+        [:value => :raw, :value_raw => :processed];
+        database,
+        show_progress = false,
+    )
 
     little = database.variables[:value]
     big_database = test_database()
@@ -459,7 +484,8 @@ end
     bytes = UInt8[1, 2, 3]
     little_frame = TelemetryAnalysis._get_variable_telemetry_frame(bytes, little)
     big_frame = TelemetryAnalysis._get_variable_telemetry_frame(
-        bytes, big_database.variables[:value])
+        bytes, big_database.variables[:value]
+    )
     @test little_frame isa SubArray
     @test parent(little_frame) === bytes
     @test little_frame == UInt8[1]
@@ -471,7 +497,8 @@ end
 
     add_variable!(database, :derived, identity; dependencies = [:value])
     empty_frame = TelemetryAnalysis._get_variable_telemetry_frame(
-        bytes, database.variables[:derived])
+        bytes, database.variables[:derived]
+    )
     @test empty_frame isa SubArray
     @test isempty(empty_frame)
     @test parent(empty_frame) === bytes
@@ -485,14 +512,17 @@ end
         frame
     end
     # Capture the raw callback view before materializing its value.
-    rtf = byte_array -> begin
-        rtf_read[] = (collect(byte_array), byte_array isa SubArray, parent(byte_array))
-        collect(byte_array)
-    end
-    add_variable!(callback_database, :value, 1, 3, identity, btf, rtf;
-        endianness = :bigendian)
-    callback_output = process_telemetry_packets([packet(bytes)], [:value];
-        database = callback_database, show_progress = false)
+    rtf =
+        byte_array -> begin
+            rtf_read[] = (collect(byte_array), byte_array isa SubArray, parent(byte_array))
+            collect(byte_array)
+        end
+    add_variable!(
+        callback_database, :value, 1, 3, identity, btf, rtf; endianness = :bigendian
+    )
+    callback_output = process_telemetry_packets(
+        [packet(bytes)], [:value]; database = callback_database, show_progress = false
+    )
     @test callback_output.value == [UInt8[3, 2, 1]]
     @test btf_read[][1:2] == (UInt8[3, 2, 1], true)
     @test rtf_read[][1:2] == (UInt8[3, 2, 1], true)
@@ -506,39 +536,46 @@ end
     little_database = test_database()
     add_variable!(little_database, :value, 2, 2, identity)
     little_frame = TelemetryAnalysis._get_variable_telemetry_frame(
-        bytes, little_database.variables[:value])
+        bytes, little_database.variables[:value]
+    )
     @test collect(little_frame) == UInt8[20, 30]
     @test parent(little_frame) === bytes
 
     big_database = test_database()
     add_variable!(big_database, :value, 2, 2, identity; endianness = :bigendian)
     big_frame = TelemetryAnalysis._get_variable_telemetry_frame(
-        bytes, big_database.variables[:value])
+        bytes, big_database.variables[:value]
+    )
     @test collect(big_frame) == UInt8[30, 20]
     @test parent(big_frame) === bytes
 
     add_variable!(little_database, :derived, identity; dependencies = [:value])
     empty_frame = TelemetryAnalysis._get_variable_telemetry_frame(
-        bytes, little_database.variables[:derived])
+        bytes, little_database.variables[:derived]
+    )
     @test isempty(empty_frame)
     @test parent(empty_frame) === bytes
     @test parentindices(empty_frame) == (5:4,)
 
     add_variable!(little_database, :late, 5, 1, identity)
     @test_throws ArgumentError TelemetryAnalysis._get_variable_telemetry_frame(
-        bytes, little_database.variables[:late])
+        bytes, little_database.variables[:late]
+    )
 
     add_variable!(little_database, :wide, 4, 2, identity)
     @test_throws ArgumentError TelemetryAnalysis._get_variable_telemetry_frame(
-        bytes, little_database.variables[:wide])
+        bytes, little_database.variables[:wide]
+    )
 
     add_variable!(little_database, :overflow_position, typemax(Int), 1, identity)
     @test_throws ArgumentError TelemetryAnalysis._get_variable_telemetry_frame(
-        bytes, little_database.variables[:overflow_position])
+        bytes, little_database.variables[:overflow_position]
+    )
 
     add_variable!(little_database, :overflow_size, 1, typemax(Int), identity)
     @test_throws ArgumentError TelemetryAnalysis._get_variable_telemetry_frame(
-        bytes, little_database.variables[:overflow_size])
+        bytes, little_database.variables[:overflow_size]
+    )
 end
 
 @testset "Processing selection order" begin
@@ -551,10 +588,7 @@ end
     @test propertynames(all_output) == [:timestamp, :alpha, :middle, :zeta]
 
     explicit_output = process_telemetry_packets(
-        [packet()],
-        [:zeta, :alpha, :middle];
-        database,
-        show_progress = false
+        [packet()], [:zeta, :alpha, :middle]; database, show_progress = false
     )
     @test propertynames(explicit_output) == [:timestamp, :zeta, :alpha, :middle]
 end
@@ -567,7 +601,7 @@ end
         [packet(), packet()],
         [:value];
         database = all_invalid_database,
-        show_progress = false
+        show_progress = false,
     )
     @test isempty(all_invalid)
     @test propertynames(all_invalid) == [:timestamp, :value]
@@ -575,8 +609,7 @@ end
     @test eltype(all_invalid.value) === Any
 
     database = test_database()
-    add_variable!(database, :value, 1, 1, identity,
-        default_bit_transfer_function, first)
+    add_variable!(database, :value, 1, 1, identity, default_bit_transfer_function, first)
     epoch = DateTime(2024)
     unsorted_packets = [
         packet(UInt8[1]; timestamp = epoch + Second(1)),
@@ -584,8 +617,9 @@ end
         packet(UInt8[3]; timestamp = epoch + Second(1)),
         packet(UInt8[4]; timestamp = epoch),
     ]
-    unsorted = process_telemetry_packets(unsorted_packets, [:value]; database,
-        show_progress = false)
+    unsorted = process_telemetry_packets(
+        unsorted_packets, [:value]; database, show_progress = false
+    )
     @test unsorted.value == UInt8[2, 4, 1, 3]
     @test unsorted.timestamp == [epoch, epoch, epoch + Second(1), epoch + Second(1)]
     @test eltype(unsorted.value) === UInt8
@@ -595,12 +629,12 @@ end
         packet(UInt8[6]; timestamp = epoch),
         packet(UInt8[7]; timestamp = epoch + Second(1)),
     ]
-    sorted = process_telemetry_packets(sorted_packets, [:value]; database,
-        show_progress = false)
+    sorted = process_telemetry_packets(
+        sorted_packets, [:value]; database, show_progress = false
+    )
     @test sorted.value == UInt8[5, 6, 7]
     @test TelemetryAnalysis._stable_valid_indices(
-        Bool[true, true, true],
-        [packet.timestamp for packet in sorted_packets]
+        Bool[true, true, true], [packet.timestamp for packet in sorted_packets]
     ) == [1, 2, 3]
 
     # Omit packets beginning with zero while preserving accepted packet values.
@@ -608,13 +642,20 @@ end
         unpack = packet -> iszero(first(packet.data)) ? nothing : packet.data
     )
     # Transform accepted values to distinguish raw and processed output columns.
-    add_variable!(filtering_database, :value, 1, 1, value -> value + 1,
-        default_bit_transfer_function, first)
+    add_variable!(
+        filtering_database,
+        :value,
+        1,
+        1,
+        value -> value + 1,
+        default_bit_transfer_function,
+        first,
+    )
     filtered = process_telemetry_packets(
         [packet(UInt8[1]), packet(UInt8[0]), packet(UInt8[3])],
         [:value => :raw, :value => :processed];
         database = filtering_database,
-        show_progress = false
+        show_progress = false,
     )
     @test filtered.value_raw == UInt8[1, 3]
     @test filtered.value == UInt8[2, 4]
@@ -627,7 +668,7 @@ end
         [packet(UInt8[1]), packet(UInt8[2])],
         [:value];
         database = heterogeneous_database,
-        show_progress = false
+        show_progress = false,
     )
     @test heterogeneous.value == Any[1, "2"]
     @test eltype(heterogeneous.value) === Any
@@ -679,8 +720,7 @@ end
     ]
     for selections in collisions
         error = try
-            process_telemetry_packets([packet()], selections; database,
-                show_progress = false)
+            process_telemetry_packets([packet()], selections; database, show_progress = false)
             nothing
         catch exception
             exception
@@ -705,7 +745,7 @@ end
         [first_packet, second_packet],
         [:value => :byte_array];
         database,
-        show_progress = false
+        show_progress = false,
     )
     @test eltype(output.value_byte_array) === Vector{UInt8}
     @test output.value_byte_array == [UInt8[8, 9], UInt8[8, 9]]
@@ -722,13 +762,13 @@ end
         [packet(UInt8[0x0f, 0xa0])],
         [:value => :byte_array_bin];
         database = formatting_database,
-        show_progress = false
+        show_progress = false,
     )
     hexadecimal = process_telemetry_packets(
         [packet(UInt8[0x0f, 0xa0])],
         [:value => :byte_array_hex];
         database = formatting_database,
-        show_progress = false
+        show_progress = false,
     )
     @test only(binary.value_byte_array) == "0b1010000000001111"
     @test only(hexadecimal.value_byte_array) == "0xA00F"

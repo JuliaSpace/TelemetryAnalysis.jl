@@ -24,8 +24,7 @@ Convert the raw telemetry into a `UInt16`. The first byte is the least significa
 function tf_uint16(raw::AbstractVector{UInt8})
     length(raw) >= 2 || throw(ArgumentError("tf_uint16 requires at least 2 bytes."))
     first_index = firstindex(raw)
-    return @inbounds UInt16(raw[first_index]) |
-        (UInt16(raw[first_index + 1]) << 8)
+    return @inbounds UInt16(raw[first_index]) | (UInt16(raw[first_index + 1]) << 8)
 end
 
 """

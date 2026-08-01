@@ -14,7 +14,7 @@ before packet processing starts.
 function _build_execution_plan(
     telemetries::Vector{Pair{Symbol, Symbol}},
     database::TelemetryDatabase,
-    index::DatabaseIndex
+    index::DatabaseIndex,
 )
     # Merge cumulative stage requirements by canonical label while retaining output order.
     stage_masks = Dict{Symbol, UInt8}()
@@ -22,10 +22,12 @@ function _build_execution_plan(
     outputs = OutputSpec[]
 
     for (requested_label, view) in telemetries
-        view in _SUPPORTED_VARIABLE_VIEWS || throw(ArgumentError(
-            "Unsupported view :$view for telemetry :$requested_label. " *
-            "Supported views are $(join(_SUPPORTED_VARIABLE_VIEWS, ", "))."
-        ))
+        view in _SUPPORTED_VARIABLE_VIEWS || throw(
+            ArgumentError(
+                "Unsupported view :$view for telemetry :$requested_label. " *
+                "Supported views are $(join(_SUPPORTED_VARIABLE_VIEWS, ", ")).",
+            ),
+        )
 
         variable_desc   = _get_variable_description(requested_label, database, index)
         canonical_label = variable_desc.label
@@ -39,7 +41,7 @@ function _build_execution_plan(
 
         push!(
             outputs,
-            OutputSpec(canonical_label, 0, view, _output_name(requested_label, view))
+            OutputSpec(canonical_label, 0, view, _output_name(requested_label, view)),
         )
     end
 
@@ -47,12 +49,7 @@ function _build_execution_plan(
 
     _expand_dependency_union!(stage_masks, discovery_order, database, index)
 
-    ordered_labels = _topological_order(
-        discovery_order,
-        stage_masks,
-        database,
-        index
-    )
+    ordered_labels = _topological_order(discovery_order, stage_masks, database, index)
 
     nodes = AbstractExecutionNode[]
     sizehint!(nodes, length(ordered_labels))
@@ -74,9 +71,8 @@ function _build_execution_plan(
             output.canonical_label,
             node_indices[output.canonical_label],
             output.view,
-            output.output_name
-        )
-        for output in outputs
+            output.output_name,
+        ) for output in outputs
     ]
 
     return ExecutionPlan(nodes, ordered_masks, resolved_outputs)
@@ -93,10 +89,12 @@ function _validate_output_names(outputs::Vector{OutputSpec})
 
     for (selection_index, output) in pairs(outputs)
         if haskey(owners, output.output_name)
-            throw(ArgumentError(
-                "Output column :$(output.output_name) collides between selections " *
-                "$(owners[output.output_name]) and $selection_index."
-            ))
+            throw(
+                ArgumentError(
+                    "Output column :$(output.output_name) collides between selections " *
+                    "$(owners[output.output_name]) and $selection_index.",
+                ),
+            )
         end
         owners[output.output_name] = selection_index
     end
@@ -146,7 +144,7 @@ function _expand_dependency_union!(
     stage_masks::Dict{Symbol, UInt8},
     discovery_order::Vector{Symbol},
     database::TelemetryDatabase,
-    index::DatabaseIndex
+    index::DatabaseIndex,
 )
     # Use an index queue over discovery order for deterministic linear traversal.
     expanded = Set{Symbol}()
@@ -191,19 +189,16 @@ end
 Resolve a dependency to its canonical descriptor or throw a contextual `KeyError`.
 """
 function _resolve_dependency(
-    dependency::Symbol,
-    owner::Symbol,
-    database::TelemetryDatabase,
-    index::DatabaseIndex
+    dependency::Symbol, owner::Symbol, database::TelemetryDatabase, index::DatabaseIndex
 )
     # Add owner context for missing references while preserving other validation errors.
     try
         return _get_variable_description(dependency, database, index)
     catch error
         if error isa KeyError
-            throw(KeyError(
-                "Dependency :$dependency required by variable :$owner is missing."
-            ))
+            throw(
+                KeyError("Dependency :$dependency required by variable :$owner is missing.")
+            )
         end
         rethrow()
     end
@@ -218,21 +213,14 @@ function _topological_order(
     discovery_order::Vector{Symbol},
     stage_masks::Dict{Symbol, UInt8},
     database::TelemetryDatabase,
-    index::DatabaseIndex
+    index::DatabaseIndex,
 )
     # Visit roots in deterministic discovery order; each edge is handled by three-state DFS.
     states         = Dict{Symbol, UInt8}()
     ordered_labels = Symbol[]
 
     for label in discovery_order
-        _topological_visit!(
-            label,
-            states,
-            ordered_labels,
-            stage_masks,
-            database,
-            index
-        )
+        _topological_visit!(label, states, ordered_labels, stage_masks, database, index)
     end
     return ordered_labels
 end
@@ -248,14 +236,12 @@ function _topological_visit!(
     ordered_labels::Vector{Symbol},
     stage_masks::Dict{Symbol, UInt8},
     database::TelemetryDatabase,
-    index::DatabaseIndex
+    index::DatabaseIndex,
 )
     # States 0, 1, and 2 mean unseen, active, and complete, respectively.
     state = get(states, label, UInt8(0))
     state == 0x02 && return nothing
-    state == 0x01 && throw(ArgumentError(
-        "Cyclic dependency detected at variable :$label."
-    ))
+    state == 0x01 && throw(ArgumentError("Cyclic dependency detected at variable :$label."))
     states[label] = UInt8(1)
 
     if stage_masks[label] & _STAGE_RAW != 0
@@ -270,7 +256,7 @@ function _topological_visit!(
                     ordered_labels,
                     stage_masks,
                     database,
-                    index
+                    index,
                 )
             end
         end
@@ -294,6 +280,6 @@ function _execution_node(variable_desc::TelemetryVariableDescription)
         variable_desc,
         variable_desc.btf,
         variable_desc.rtf,
-        variable_desc.tf
+        variable_desc.tf,
     )
 end

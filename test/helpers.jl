@@ -39,9 +39,7 @@ const LAST_SOURCE_RANGE = Ref{Tuple{DateTime, DateTime}}()
 
 # Record ranged requests and return one deterministic packet.
 function TelemetryAnalysis._api_get_telemetry(
-    ::TestSource,
-    start_time::DateTime,
-    end_time::DateTime,
+    ::TestSource, start_time::DateTime, end_time::DateTime
 )
     LAST_SOURCE_RANGE[] = (start_time, end_time)
     return [TelemetryPacket{TestSource}(; timestamp = start_time, data = UInt8[1])]
@@ -53,11 +51,7 @@ function TelemetryAnalysis._api_get_telemetry(::TestSource)
 end
 
 # Construct a test packet while allowing explicit data, timestamp, and metadata.
-function packet(
-    data = UInt8[1, 2, 3, 4];
-    timestamp = DateTime(2024),
-    metadata = nothing,
-)
+function packet(data = UInt8[1, 2, 3, 4]; timestamp = DateTime(2024), metadata = nothing)
     return TelemetryPacket{TestSource}(; timestamp, data, metadata)
 end
 

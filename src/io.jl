@@ -15,9 +15,9 @@ if the user did not select an option.
 """
 function get_user_option(text::String, options::AbstractVector)
     hascolor = get(stdout, :color, false)
-    cr = (hascolor ? string(crayon"reset")       : "")
+    cr = (hascolor ? string(crayon"reset") : "")
     cy = (hascolor ? string(crayon"yellow bold") : "")
-    return request(cy * text * cr, RadioMenu(options, pagesize = 5))
+    return request(cy * text * cr, RadioMenu(options; pagesize = 5))
 end
 
 ############################################################################################
@@ -26,31 +26,28 @@ end
 
 # == TelemetryPacket =======================================================================
 
-function show(io::IO, tmpacket::TelemetryPacket{T}) where T <: TelemetrySource
+function show(io::IO, tmpacket::TelemetryPacket{T}) where {T <: TelemetrySource}
     num_bytes = length(tmpacket.data)
     print(
-        io,
-        "TelemetryPacket {$T} (Timestamp = $(tmpacket.timestamp), $(num_bytes) bytes)",
+        io, "TelemetryPacket {$T} (Timestamp = $(tmpacket.timestamp), $(num_bytes) bytes)"
     )
     return nothing
 end
 
 function show(
-    io::IO,
-    ::MIME"text/plain",
-    tmpacket::TelemetryPacket{T},
-) where T <: TelemetrySource
+    io::IO, ::MIME"text/plain", tmpacket::TelemetryPacket{T}
+) where {T <: TelemetrySource}
     # Colors.
     hascolor = get(io, :color, false)
-    cr = (hascolor ? string(crayon"reset")       : "")
+    cr = (hascolor ? string(crayon"reset") : "")
     cy = (hascolor ? string(crayon"yellow bold") : "")
-    cb = (hascolor ? string(crayon"blue bold")   : "")
+    cb = (hascolor ? string(crayon"blue bold") : "")
 
     num_bytes = length(tmpacket.data)
     println(io, "TelemetryPacket{$T}:")
     println(io, cy * "    Timestamp" * cr * " : " * string(tmpacket.timestamp))
-    print(  io, cy * "         Data" * cr * " : " * string(num_bytes) * " bytes")
-    aux =       cy * "     Metadata" * cr * " : "
+    print(io, cy * "         Data" * cr * " : " * string(num_bytes) * " bytes")
+    aux = cy * "     Metadata" * cr * " : "
 
     metadata = tmpacket.metadata
     if metadata !== nothing && !isempty(metadata)
@@ -79,9 +76,9 @@ end
 function show(io::IO, ::MIME"text/plain", db::TelemetryDatabase)
     # Colors.
     hascolor = get(io, :color, false)
-    cr = (hascolor ? string(crayon"reset")       : "")
+    cr = (hascolor ? string(crayon"reset") : "")
     cy = (hascolor ? string(crayon"yellow bold") : "")
-    cc = (hascolor ? string(crayon"cyan")        : "")
+    cc = (hascolor ? string(crayon"cyan") : "")
 
     num_variables = length(db.variables)
     println(io, "TelemetryDatabase:")
@@ -89,13 +86,21 @@ function show(io::IO, ::MIME"text/plain", db::TelemetryDatabase)
     println(io, cy * "          Number of variables" * cr * " : " * string(num_variables))
     println(
         io,
-        cy * "       Get timestamp function" * cr * " : " *
-        cc * string(db.get_telemetry_timestamp),
+        cy *
+        "       Get timestamp function" *
+        cr *
+        " : " *
+        cc *
+        string(db.get_telemetry_timestamp),
     )
     print(
         io,
-        cy * "    Unpack telemetry function" * cr * " : " *
-        cc * string(db.unpack_telemetry),
+        cy *
+        "    Unpack telemetry function" *
+        cr *
+        " : " *
+        cc *
+        string(db.unpack_telemetry),
     )
 
     return nothing
@@ -112,17 +117,16 @@ end
 function show(io::IO, ::MIME"text/plain", var::TelemetryVariableDescription)
     # Colors.
     hascolor = get(io, :color, false)
-    cr = (hascolor ? string(crayon"reset")       : "")
+    cr = (hascolor ? string(crayon"reset") : "")
     cy = (hascolor ? string(crayon"yellow bold") : "")
-    cc = (hascolor ? string(crayon"cyan")        : "")
+    cc = (hascolor ? string(crayon"cyan") : "")
 
     alias_str = !isnothing(var.alias) ? " ($(var.alias))" : ""
     endianness_str = var.endianness == :bigendian ? "Big endian" : "Little endian"
 
     println(io, "TelemetryVariableDescription:")
     println(
-        io,
-        cy * "                    Label" * cr * " : " * string(var.label) * alias_str,
+        io, cy * "                    Label" * cr * " : " * string(var.label) * alias_str
     )
     println(io, cy * "              Description" * cr * " : " * var.description)
     println(io, cy * "               Endianness" * cr * " : " * endianness_str)
@@ -130,7 +134,7 @@ function show(io::IO, ::MIME"text/plain", var::TelemetryVariableDescription)
     println(io, cy * "                     Size" * cr * " : " * string(var.size) * " bytes")
     println(io, cy * "    Bit Transfer function" * cr * " : " * cc * string(var.btf))
     println(io, cy * "    Raw Transfer function" * cr * " : " * cc * string(var.rtf))
-    print(  io, cy * "        Transfer function" * cr * " : " * cc * string(var.tf))
+    print(io, cy * "        Transfer function" * cr * " : " * cc * string(var.tf))
 
     return nothing
 end

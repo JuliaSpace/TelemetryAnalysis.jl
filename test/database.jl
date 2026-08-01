@@ -10,28 +10,34 @@
     @test get_variable_description(:temperature, database) ===
         get_variable_description(:temp, database)
     @test_throws ArgumentError add_identity_variable!(database, :timestamp)
-    @test_throws ArgumentError add_identity_variable!(database, :pressure;
-        alias = :timestamp)
-    @test_throws ArgumentError add_variable!(database, :derived, identity;
-        dependencies = Symbol[])
+    @test_throws ArgumentError add_identity_variable!(
+        database, :pressure; alias = :timestamp
+    )
+    @test_throws ArgumentError add_variable!(
+        database, :derived, identity; dependencies = Symbol[]
+    )
     @test_throws KeyError get_variable_description(:missing, database)
 
-    @test_throws ArgumentError add_identity_variable!(database, :pressure;
-        alias = :temperature)
+    @test_throws ArgumentError add_identity_variable!(
+        database, :pressure; alias = :temperature
+    )
     @test_throws ArgumentError add_identity_variable!(database, :temp)
     @test_throws ArgumentError add_identity_variable!(database, :pressure; alias = :temp)
 
-    @test_throws ArgumentError add_identity_variable!(database, :invalid;
-        endianness = :middle)
-    @test_throws ArgumentError add_identity_variable!(database, :invalid;
-        default_view = :unknown)
+    @test_throws ArgumentError add_identity_variable!(
+        database, :invalid; endianness = :middle
+    )
+    @test_throws ArgumentError add_identity_variable!(
+        database, :invalid; default_view = :unknown
+    )
     @test_throws ArgumentError add_variable!(database, :invalid, 0, 1, identity)
     @test_throws ArgumentError add_variable!(database, :invalid, 1, 0, identity)
     @test_throws ArgumentError add_variable!(database, :invalid, -1, 1, identity)
     @test_throws ArgumentError add_variable!(database, :invalid, 0, 0, identity)
 
-    add_variable!(database, :frame_with_dependencies, 1, 1, identity;
-        dependencies = [:temperature])
+    add_variable!(
+        database, :frame_with_dependencies, 1, 1, identity; dependencies = [:temperature]
+    )
     add_variable!(database, :derived, identity; dependencies = [:temperature])
     @test database.variables[:derived].position == 0
     @test database.variables[:derived].size == 0
@@ -63,7 +69,7 @@
         descriptor.size,
         descriptor.tf,
         descriptor.btf,
-        descriptor.rtf
+        descriptor.rtf,
     )
     @test_throws ArgumentError get_variable_description(:value, mutated)
 
@@ -81,7 +87,7 @@
         second.size,
         second.tf,
         second.btf,
-        second.rtf
+        second.rtf,
     )
     @test_throws ArgumentError get_variable_description(:shared, ambiguous)
 

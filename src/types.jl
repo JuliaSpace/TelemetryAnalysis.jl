@@ -15,11 +15,7 @@ default_bit_transfer_function(frame::AbstractVector{UInt8}) = frame
 default_raw_transfer_function(frame::AbstractVector{UInt8}) = frame
 
 const _SUPPORTED_VARIABLE_VIEWS = (
-    :byte_array,
-    :byte_array_bin,
-    :byte_array_hex,
-    :processed,
-    :raw,
+    :byte_array, :byte_array_bin, :byte_array_hex, :processed, :raw
 )
 
 """
@@ -42,7 +38,7 @@ Telemetry packet obtained from the source `T`.
     packet; pass a dictionary explicitly when mutable metadata is required.
     (**Default**: `nothing`)
 """
-@kwdef struct TelemetryPacket{T<:TelemetrySource}
+@kwdef struct TelemetryPacket{T <: TelemetrySource}
     timestamp::DateTime
     data::Vector{UInt8}
     metadata::Union{Nothing, Dict{String, Any}} = nothing
@@ -82,16 +78,13 @@ The `nothing` default is a structural layout change. Older package versions are 
 to deserialize packets written with this layout.
 """
 function with_metadata(
-    packet::TelemetryPacket{T},
-    metadata::Union{Nothing, AbstractDict},
-) where T <: TelemetrySource
+    packet::TelemetryPacket{T}, metadata::Union{Nothing, AbstractDict}
+) where {T <: TelemetrySource}
     # Normalize dictionaries to the declared mutable type without sharing caller storage.
     normalized = metadata === nothing ? nothing : Dict{String, Any}(metadata)
     # Share packet data intentionally because only the metadata value is being replaced.
     return TelemetryPacket{T}(;
-        timestamp = packet.timestamp,
-        data = packet.data,
-        metadata = normalized,
+        timestamp = packet.timestamp, data = packet.data, metadata = normalized
     )
 end
 
@@ -157,15 +150,17 @@ Defines a telemetry database.
     label::String
     get_telemetry_timestamp::F1
     unpack_telemetry::F2
-    variables::Dict{Symbol, TelemetryVariableDescription} =
-        Dict{Symbol, TelemetryVariableDescription}()
+    variables::Dict{Symbol, TelemetryVariableDescription} = Dict{
+        Symbol, TelemetryVariableDescription
+    }()
 
     # == Private fields ====================================================================
 
     # Retained for public layout compatibility. Processing does not persist dependency plans
     # while `variables` remains publicly mutable.
-    _variable_dependencies::Dict{Symbol, Union{Nothing, Vector{Symbol}}} =
-        Dict{Symbol, Union{Nothing, Vector{Symbol}}}()
+    _variable_dependencies::Dict{Symbol, Union{Nothing, Vector{Symbol}}} = Dict{
+        Symbol, Union{Nothing, Vector{Symbol}}
+    }()
 end
 
 """
@@ -290,5 +285,5 @@ PacketExecutionState(node_count::Int) = PacketExecutionState(
     Vector{Any}(undef, node_count),
     Vector{Any}(undef, node_count),
     Vector{Any}(undef, node_count),
-    Dict{Symbol, Any}()
+    Dict{Symbol, Any}(),
 )

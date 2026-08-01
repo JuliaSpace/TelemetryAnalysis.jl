@@ -70,10 +70,8 @@ where all the available telemetry will be fetched.
 - `Vector{TelemetryPacket{T}}`: The fetched telemetry packets.
 """
 function get_telemetry(
-    source::T,
-    start_time::DateTime,
-    end_time::DateTime
-) where T<:TelemetrySource
+    source::T, start_time::DateTime, end_time::DateTime
+) where {T <: TelemetrySource}
     @info "Fetching the telemetry between $start_time and $end_time [Source type: $T]"
 
     start_timestamp = now()
@@ -87,7 +85,7 @@ end
 
 Validate a source result, report its packet count, and publish it as the default collection.
 """
-function _finalize_telemetry_fetch(result, ::Type{T}, start_timestamp::DateTime) where T
+function _finalize_telemetry_fetch(result, ::Type{T}, start_timestamp::DateTime) where {T}
     # Centralize source result validation before logging or mutating default packet state.
     packets = result::Vector{TelemetryPacket{T}}
     num_packets = length(packets)
@@ -105,9 +103,7 @@ function _finalize_telemetry_fetch(result, ::Type{T}, start_timestamp::DateTime)
 end
 
 function get_telemetry(
-    source::TelemetrySource,
-    start_time::DateTime,
-    interval::Unitful.Quantity
+    source::TelemetrySource, start_time::DateTime, interval::Unitful.Quantity
 )
     milliseconds = ustrip(uconvert(Unitful.ms, interval))
     isfinite(milliseconds) || throw(ArgumentError("The interval must be finite."))
@@ -118,16 +114,18 @@ function get_telemetry(
         Millisecond(Int64(milliseconds))
     catch conversion_error
         conversion_error isa InexactError || rethrow()
-        throw(ArgumentError(
-            "The interval must be exactly representable as a whole number of Int64 " *
-            "milliseconds; received $interval."
-        ))
+        throw(
+            ArgumentError(
+                "The interval must be exactly representable as a whole number of Int64 " *
+                "milliseconds; received $interval.",
+            ),
+        )
     end
     end_time = start_time + Δt
     return get_telemetry(source, start_time, end_time)
 end
 
-function get_telemetry(source::T) where T<:TelemetrySource
+function get_telemetry(source::T) where {T <: TelemetrySource}
     @info "Fetching all available telemetry [Source type: $T]"
 
     start_timestamp = now()
@@ -150,7 +148,7 @@ get_telemetry() = get_telemetry(get_default_telemetry_source())
 
 Set the default telemetry packets to `tmpackets`.
 """
-function set_default_telemetry_packets!(tmpackets::Vector{TelemetryPacket{T}}) where T
+function set_default_telemetry_packets!(tmpackets::Vector{TelemetryPacket{T}}) where {T}
     _DEFAULT_TELEMETRY_PACKETS[] = tmpackets
     return nothing
 end

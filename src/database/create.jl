@@ -157,7 +157,7 @@ function add_variable!(
     default_view::Symbol = :processed,
     dependencies::Union{Nothing, Vector{Symbol}} = nothing,
     description::String = "",
-    endianness::Symbol = :littleendian
+    endianness::Symbol = :littleendian,
 )
     copied_dependencies = isnothing(dependencies) ? nothing : copy(dependencies)
     _validate_variable_range(position, size, copied_dependencies, label)
@@ -177,7 +177,7 @@ function add_variable!(
         Int(size),
         tf,
         btf,
-        rtf
+        rtf,
     )
 
     # Validate the new descriptor and its conflicts before mutating the database.
@@ -197,7 +197,7 @@ function add_variable!(
     default_view::Symbol = :processed,
     dependencies::Vector{Symbol},
     description::String = "",
-    endianness::Symbol = :littleendian
+    endianness::Symbol = :littleendian,
 )
     if isempty(dependencies)
         throw(ArgumentError("A derived variable must have dependencies."))
@@ -217,7 +217,7 @@ function add_variable!(
         default_view,
         dependencies,
         description,
-        endianness
+        endianness,
     )
 end
 
@@ -234,7 +234,7 @@ function add_variable!(database::TelemetryDatabase, tvd::TelemetryVariableDescri
         default_view = tvd.default_view,
         dependencies = tvd.dependencies,
         description = tvd.description,
-        endianness = tvd.endianness
+        endianness = tvd.endianness,
     )
     return nothing
 end
@@ -265,16 +265,15 @@ ignored because it is being replaced.
 """
 function _validate_variable_conflicts(
     variables::AbstractDict{Symbol, TelemetryVariableDescription},
-    variable_desc::TelemetryVariableDescription
+    variable_desc::TelemetryVariableDescription,
 )
     label = variable_desc.label
     alias = variable_desc.alias
 
     if !isnothing(alias)
         alias === :timestamp && throw(ArgumentError("The alias :timestamp is reserved."))
-        (alias === label || haskey(variables, alias)) && throw(ArgumentError(
-            "Alias :$alias conflicts with variable label :$alias."
-        ))
+        (alias === label || haskey(variables, alias)) &&
+            throw(ArgumentError("Alias :$alias conflicts with variable label :$alias."))
     end
 
     for (existing_label, existing_desc) in variables
@@ -284,25 +283,31 @@ function _validate_variable_conflicts(
         existing_alias = existing_desc.alias
         isnothing(existing_alias) && continue
 
-        existing_alias === label && throw(ArgumentError(
-            "Variable label :$label conflicts with the alias of variable " *
-            ":$existing_label."
-        ))
+        existing_alias === label && throw(
+            ArgumentError(
+                "Variable label :$label conflicts with the alias of variable " *
+                ":$existing_label.",
+            ),
+        )
 
-        (existing_alias === alias) && throw(ArgumentError(
-            "Alias :$alias is ambiguous between variables :$existing_label and :$label."
-        ))
+        (existing_alias === alias) && throw(
+            ArgumentError(
+                "Alias :$alias is ambiguous between variables :$existing_label and :$label.",
+            ),
+        )
     end
 
     return nothing
 end
 
-function _default_unpack_telemetry(tmpacket::TelemetryPacket{T}) where T<:TelemetrySource
+function _default_unpack_telemetry(
+    tmpacket::TelemetryPacket{T}
+) where {T <: TelemetrySource}
     return tmpacket.data
 end
 
 function _default_get_telemetry_timestamp(
     tmpacket::TelemetryPacket{T}
-) where T<:TelemetrySource
+) where {T <: TelemetrySource}
     return tmpacket.timestamp
 end

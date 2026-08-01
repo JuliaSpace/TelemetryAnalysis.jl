@@ -77,48 +77,36 @@ are sorted by timestamp, with equal timestamps retaining their original input or
     without processing a packet.
 """
 function process_telemetry_packets(;
-    database::TelemetryDatabase = get_default_database(),
-    show_progress::Bool = true
+    database::TelemetryDatabase = get_default_database(), show_progress::Bool = true
 )
     return process_telemetry_packets(
-        get_default_telemetry_packets();
-        database,
-        show_progress
+        get_default_telemetry_packets(); database, show_progress
     )
 end
 
 function process_telemetry_packets(
     tmpackets::Vector{TelemetryPacket{T}};
     database::TelemetryDatabase = get_default_database(),
-    show_progress::Bool = true
-) where T <: TelemetrySource
-
+    show_progress::Bool = true,
+) where {T <: TelemetrySource}
     index = _build_database_index(database)
 
     telemetries = Pair{Symbol, Symbol}[
-        label => database.variables[label].default_view
-        for label in index.canonical_labels
+        label => database.variables[label].default_view for label in index.canonical_labels
     ]
 
     return _process_telemetry_packets(
-        tmpackets,
-        telemetries,
-        database,
-        index,
-        show_progress
+        tmpackets, telemetries, database, index, show_progress
     )
 end
 
 function process_telemetry_packets(
     telemetries::AbstractVector;
     database::TelemetryDatabase = get_default_database(),
-    show_progress::Bool = true
+    show_progress::Bool = true,
 )
     return process_telemetry_packets(
-        get_default_telemetry_packets(),
-        telemetries;
-        database,
-        show_progress
+        get_default_telemetry_packets(), telemetries; database, show_progress
     )
 end
 
@@ -126,33 +114,24 @@ function process_telemetry_packets(
     tmpackets::Vector{TelemetryPacket{T}},
     telemetries::AbstractVector;
     database::TelemetryDatabase = get_default_database(),
-    show_progress::Bool = true
-) where T <: TelemetrySource
+    show_progress::Bool = true,
+) where {T <: TelemetrySource}
     index = _build_database_index(database)
     selections = Pair{Symbol, Symbol}[
-        _normalize_telemetry_selection(telemetry, database, index)
-        for telemetry in telemetries
+        _normalize_telemetry_selection(telemetry, database, index) for
+        telemetry in telemetries
     ]
 
-    return _process_telemetry_packets(
-        tmpackets,
-        selections,
-        database,
-        index,
-        show_progress
-    )
+    return _process_telemetry_packets(tmpackets, selections, database, index, show_progress)
 end
 
 function process_telemetry_packets(
     telemetries::Vector{Pair{Symbol, Symbol}};
     database::TelemetryDatabase = get_default_database(),
-    show_progress::Bool = true
+    show_progress::Bool = true,
 )
     return process_telemetry_packets(
-        get_default_telemetry_packets(),
-        telemetries;
-        database,
-        show_progress
+        get_default_telemetry_packets(), telemetries; database, show_progress
     )
 end
 
@@ -160,16 +139,12 @@ function process_telemetry_packets(
     tmpackets::Vector{TelemetryPacket{T}},
     telemetries::Vector{Pair{Symbol, Symbol}};
     database::TelemetryDatabase = get_default_database(),
-    show_progress::Bool = true
-) where T <: TelemetrySource
+    show_progress::Bool = true,
+) where {T <: TelemetrySource}
     index = _build_database_index(database)
 
     return _process_telemetry_packets(
-        tmpackets,
-        telemetries,
-        database,
-        index,
-        show_progress
+        tmpackets, telemetries, database, index, show_progress
     )
 end
 
@@ -181,9 +156,7 @@ the variable default view, whereas a `Pair{Symbol, Symbol}` is returned unchange
 object is rejected with an `ArgumentError`.
 """
 function _normalize_telemetry_selection(
-    telemetry,
-    database::TelemetryDatabase,
-    index::DatabaseIndex
+    telemetry, database::TelemetryDatabase, index::DatabaseIndex
 )
     telemetry isa Pair{Symbol, Symbol} && return telemetry
 
@@ -193,10 +166,12 @@ function _normalize_telemetry_selection(
     end
 
     # Reject unsupported selection objects clearly instead of leaking a MethodError.
-    throw(ArgumentError(
-        "Telemetry selections must be a Symbol or a Pair{Symbol, Symbol}; received " *
-        "$(repr(telemetry))."
-    ))
+    return throw(
+        ArgumentError(
+            "Telemetry selections must be a Symbol or a Pair{Symbol, Symbol}; received " *
+            "$(repr(telemetry)).",
+        ),
+    )
 end
 
 """
@@ -209,8 +184,8 @@ function _process_telemetry_packets(
     telemetries::Vector{Pair{Symbol, Symbol}},
     database::TelemetryDatabase,
     index::DatabaseIndex,
-    show_progress::Bool
-) where T <: TelemetrySource
+    show_progress::Bool,
+) where {T <: TelemetrySource}
     plan         = _build_execution_plan(telemetries, database, index)
     packet_count = length(tmpackets)
 
@@ -257,7 +232,7 @@ function _process_telemetry_packets(
                 buffers.byte_arrays,
                 buffers.raw_values,
                 buffers.processed_values,
-                Dict{Symbol, Any}()
+                Dict{Symbol, Any}(),
             )
 
             for node_index in eachindex(plan.nodes)
@@ -266,14 +241,13 @@ function _process_telemetry_packets(
                     plan.nodes[node_index],
                     unpacked_frame,
                     node_index,
-                    plan.stage_masks[node_index]
+                    plan.stage_masks[node_index],
                 )
             end
 
             for output_index in eachindex(plan.outputs)
                 output_storage[output_index][packet_index] = _output_value(
-                    state,
-                    plan.outputs[output_index]
+                    state, plan.outputs[output_index]
                 )
             end
 
@@ -289,10 +263,7 @@ function _process_telemetry_packets(
 
     # Defer DataFrame construction until threaded writes and stable ordering are complete.
     output = _build_output_dataframe(
-        timestamps,
-        output_storage,
-        valid_indices,
-        plan.outputs
+        timestamps, output_storage, valid_indices, plan.outputs
     )
 
     @info "$(nrow(output)) packets out of $packet_count were processed correctly."
@@ -309,21 +280,20 @@ function _execute_node!(
     node::ExecutionNode{B, R, F},
     unpacked_frame::AbstractVector{UInt8},
     node_index::Int,
-    stage_mask::UInt8
+    stage_mask::UInt8,
 ) where {B, R, F}
     # Execute one cumulative stage mask so duplicate outputs share all callback results.
-    variable_frame = _get_variable_telemetry_frame(
-        unpacked_frame,
-        node.variable_desc
-    )
+    variable_frame = _get_variable_telemetry_frame(unpacked_frame, node.variable_desc)
 
     byte_array = _execute_btf(node, variable_frame)
 
     if !(byte_array isa AbstractVector{UInt8})
-        throw(ArgumentError(
-            "Bit transfer callback for variable :$(node.label) must return an " *
-            "AbstractVector{UInt8}; received $(typeof(byte_array))."
-        ))
+        throw(
+            ArgumentError(
+                "Bit transfer callback for variable :$(node.label) must return an " *
+                "AbstractVector{UInt8}; received $(typeof(byte_array)).",
+            ),
+        )
     end
 
     state.byte_arrays[node_index] = byte_array
@@ -356,9 +326,7 @@ end
 Invoke a node's concretely typed raw callback while preserving `applicable` semantics.
 """
 function _execute_rtf(
-    node::ExecutionNode{B, R, F},
-    byte_array,
-    context::Dict{Symbol, Any}
+    node::ExecutionNode{B, R, F}, byte_array, context::Dict{Symbol, Any}
 ) where {B, R, F}
     # Prefer the context-aware callback whenever both supported signatures are applicable.
     if applicable(node.rtf, byte_array, context)
@@ -374,9 +342,7 @@ end
 Invoke a node's concretely typed processed callback while preserving `applicable` semantics.
 """
 function _execute_tf(
-    node::ExecutionNode{B, R, F},
-    raw_value,
-    context::Dict{Symbol, Any}
+    node::ExecutionNode{B, R, F}, raw_value, context::Dict{Symbol, Any}
 ) where {B, R, F}
     # Prefer the context-aware callback whenever both supported signatures are applicable.
     if applicable(node.tf, raw_value, context)
@@ -434,11 +400,7 @@ function _stable_valid_indices(validity::Vector{Bool}, timestamps::Vector{DateTi
 
     # Sort the increasing indices in place; MergeSort keeps packet order for equal
     # timestamps.
-    return sort!(
-        valid_indices;
-        by = index -> timestamps[index],
-        alg = Base.Sort.MergeSort
-    )
+    return sort!(valid_indices; by = index -> timestamps[index], alg = Base.Sort.MergeSort)
 end
 
 """
@@ -450,7 +412,7 @@ function _build_output_dataframe(
     timestamps::Vector{DateTime},
     storage::Vector{Vector{Any}},
     valid_indices::Vector{Int},
-    outputs::Vector{OutputSpec}
+    outputs::Vector{OutputSpec},
 )
     # Gather only valid slots so uninitialized packet slots are never read.
     output_timestamps = DateTime[timestamps[index] for index in valid_indices]
@@ -460,7 +422,7 @@ function _build_output_dataframe(
         push!(
             columns,
             outputs[output_index].output_name =>
-                _gather_output_column(storage[output_index], valid_indices)
+                _gather_output_column(storage[output_index], valid_indices),
         )
     end
 
@@ -504,8 +466,7 @@ use a parent-backed empty view starting at `firstindex(unpacked_frame)`. Descrip
 positions are logical one-based byte offsets, independent of the vector's native indices.
 """
 function _get_variable_telemetry_frame(
-    unpacked_frame::AbstractVector{UInt8},
-    variable_desc::TelemetryVariableDescription
+    unpacked_frame::AbstractVector{UInt8}, variable_desc::TelemetryVariableDescription
 )
     # Anchor at the parent's first index before translating logical one-based positions.
     first_frame_index = firstindex(unpacked_frame)
@@ -514,33 +475,41 @@ function _get_variable_telemetry_frame(
 
     if iszero(variable_desc.size)
         # Return an empty view so derived variables preserve parent ownership and axes.
-        iszero(position) || throw(ArgumentError(
-            "Derived-only variable :$(variable_desc.label) must use position 0 and size 0."
-        ))
+        iszero(position) || throw(
+            ArgumentError(
+                "Derived-only variable :$(variable_desc.label) must use position 0 and size 0.",
+            ),
+        )
         return @view unpacked_frame[first_frame_index:(first_frame_index - 1)]
     end
 
     if position < 1 || size < 1
-        throw(ArgumentError(
-            "Frame-backed variable :$(variable_desc.label) must have positive position " *
-            "and size."
-        ))
+        throw(
+            ArgumentError(
+                "Frame-backed variable :$(variable_desc.label) must have positive position " *
+                "and size.",
+            ),
+        )
     end
 
     frame_length = length(unpacked_frame)
     if position > frame_length
-        throw(ArgumentError(
-            "Variable :$(variable_desc.label) starts at logical byte $position, but the " *
-            "unpacked frame contains $frame_length bytes."
-        ))
+        throw(
+            ArgumentError(
+                "Variable :$(variable_desc.label) starts at logical byte $position, but the " *
+                "unpacked frame contains $frame_length bytes.",
+            ),
+        )
     end
 
     available_length = frame_length - position + 1
     if size > available_length
-        throw(ArgumentError(
-            "Variable :$(variable_desc.label) requests $size bytes from logical byte " *
-            "$position, but only $available_length bytes are available."
-        ))
+        throw(
+            ArgumentError(
+                "Variable :$(variable_desc.label) requests $size bytes from logical byte " *
+                "$position, but only $available_length bytes are available.",
+            ),
+        )
     end
 
     # Derive native indices only after validating the logical frame range.

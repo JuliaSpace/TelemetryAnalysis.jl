@@ -22,9 +22,8 @@ Search for variables registered in `database` whose label, alias, or description
     If `database` is not provided, the default one is used.
 """
 function search_variables(
-    pattern::T,
-    database::TelemetryDatabase = get_default_database()
-) where T<:Union{AbstractString, Regex}
+    pattern::T, database::TelemetryDatabase = get_default_database()
+) where {T <: Union{AbstractString, Regex}}
     # Vector to store the keys of the variables that match the search pattern.
     varnames = Symbol[]
 
@@ -54,7 +53,7 @@ function search_variables(
 
         label_match = contains(label_str, pattern)
         alias_match = contains(alias_str, pattern)
-        desc_match  = contains(desc_str,  pattern)
+        desc_match  = contains(desc_str, pattern)
 
         (label_match || alias_match || desc_match) && push!(varnames, k)
     end
@@ -74,7 +73,7 @@ function search_variables(
 
                 return out
             end, varnames),
-            map(v -> database.variables[v].description, varnames)
+            map(v -> database.variables[v].description, varnames),
         )
 
         hl1 = TextHighlighter((data, i, j) -> j == 1, crayon"yellow bold")
@@ -84,7 +83,7 @@ function search_variables(
             @text__no_vertical_lines,
             horizontal_line_after_column_labels = true,
             suppress_vertical_lines_at_column_labels = false,
-            vertical_lines_at_data_columns = [1]
+            vertical_lines_at_data_columns = [1],
         )
 
         pretty_table(
@@ -94,12 +93,11 @@ function search_variables(
             fit_table_in_display_horizontally = true,
             fit_table_in_display_vertically   = false,
             highlighters                      = [hl1],
-            table_format                      = table_format
+            table_format                      = table_format,
         )
 
     else
         println("No variable was found!")
-
     end
 
     return nothing

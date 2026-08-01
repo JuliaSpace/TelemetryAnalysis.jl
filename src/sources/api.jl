@@ -14,11 +14,9 @@ This function must return an object of type `T` if the initialization was succes
 `nothing` otherwise.
 """
 function _api_init_telemetry_source(
-    ::Type{T},
-    vargs...;
-    kwargs...
-) where T<:TelemetrySource
-    error("`init_telemetry_source` is not implemented for the source $(T).")
+    ::Type{T}, vargs...; kwargs...
+) where {T <: TelemetrySource}
+    return error("`init_telemetry_source` is not implemented for the source $(T).")
 end
 
 """
@@ -36,13 +34,11 @@ Some telemetry sources can also implement the simplified API:
 which returns all the telemetry.
 """
 function _api_get_telemetry(
-    source::T,
-    start_time::DateTime,
-    end_time::DateTime
-) where T<:TelemetrySource
-    error("`get_telemetry` is not implemented for the source $(T).")
+    source::T, start_time::DateTime, end_time::DateTime
+) where {T <: TelemetrySource}
+    return error("`get_telemetry` is not implemented for the source $(T).")
 end
 
-function _api_get_telemetry(source::T) where T<:TelemetrySource
-    error("The source $(T) does not implement a full dump using `get_telemetry`.")
+function _api_get_telemetry(source::T) where {T <: TelemetrySource}
+    return error("The source $(T) does not implement a full dump using `get_telemetry`.")
 end

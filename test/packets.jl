@@ -54,8 +54,7 @@ end
     default_allocations = @allocated escaped_default_packets(1_000)
     dictionary_allocations = @allocated escaped_dictionary_packets(1_000)
     @test default_allocations < dictionary_allocations
-    @test fieldtype(typeof(first_packet), :metadata) ===
-        Union{Nothing, Dict{String, Any}}
+    @test fieldtype(typeof(first_packet), :metadata) === Union{Nothing, Dict{String, Any}}
 
     minor = "$(VERSION.major).$(VERSION.minor)"
     fixture = joinpath(@__DIR__, "fixtures", "julia-$minor", "packets.ser.gz")
@@ -70,8 +69,7 @@ end
         end
         @test length(packets) == 2
         @test isempty(first(packets).metadata)
-        @test last(packets).metadata ==
-            Dict{String, Any}("mode" => "legacy", "id" => 7)
+        @test last(packets).metadata == Dict{String, Any}("mode" => "legacy", "id" => 7)
         @test hasmetadata(last(packets))
     end
 end

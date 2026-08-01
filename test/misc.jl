@@ -10,8 +10,7 @@
     @test byte_array_to_hex(bytes) == "0xA201"
     @test byte_array_to_binary(UInt8[]) == "0b"
     @test byte_array_to_hex(UInt8[]) == "0x"
-    @test byte_array_to_binary(UInt8[0x00, 0xFF, 0x05]) ==
-        "0b000001011111111100000000"
+    @test byte_array_to_binary(UInt8[0x00, 0xFF, 0x05]) == "0b000001011111111100000000"
     @test byte_array_to_hex(UInt8[0x00, 0x0A, 0xF0]) == "0xF00A00"
     @test ncodeunits(byte_array_to_binary(fill(0x00, 17))) == 2 + 8 * 17
     @test ncodeunits(byte_array_to_hex(fill(0x00, 17))) == 2 + 2 * 17
