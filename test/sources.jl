@@ -39,7 +39,7 @@
         Inf * s,
         (big(typemax(Int64)) + 1) * Unitful.ms,
     )
-        @test_throws Exception get_telemetry(source, start_time, interval)
+        @test_throws ArgumentError get_telemetry(source, start_time, interval)
     end
     @test_throws Exception get_telemetry(source, start_time, 1Unitful.m)
 end

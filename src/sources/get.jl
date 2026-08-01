@@ -112,7 +112,17 @@ function get_telemetry(
     milliseconds = ustrip(uconvert(Unitful.ms, interval))
     isfinite(milliseconds) || throw(ArgumentError("The interval must be finite."))
     milliseconds >= 0 || throw(ArgumentError("The interval must not be negative."))
-    Δt = Millisecond(Int64(milliseconds))
+
+    # Convert exactly so fractional or overflowing intervals fail as documented.
+    Δt = try
+        Millisecond(Int64(milliseconds))
+    catch conversion_error
+        conversion_error isa InexactError || rethrow()
+        throw(ArgumentError(
+            "The interval must be exactly representable as a whole number of Int64 " *
+            "milliseconds; received $interval."
+        ))
+    end
     end_time = start_time + Δt
     return get_telemetry(source, start_time, end_time)
 end
