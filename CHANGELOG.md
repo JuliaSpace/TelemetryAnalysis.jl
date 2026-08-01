@@ -1,6 +1,14 @@
 TelemetryAnalysis.jl Changelog
 ==============================
 
+Version 3.0.1
+-------------
+
+- ![Info][badge-info] The package now uses JuliaFormatter with a committed configuration,
+  and the entire codebase was formatted accordingly.
+- ![Info][badge-info] We fixed some docstrings.
+- ![Info][badge-info] We added instructions for coding agents (AGENTS.md and CLAUDE.md).
+
 Version 3.0.0
 -------------
 
