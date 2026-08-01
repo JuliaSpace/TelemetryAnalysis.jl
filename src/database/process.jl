@@ -432,14 +432,13 @@ function _stable_valid_indices(validity::Vector{Bool}, timestamps::Vector{DateTi
 
     already_sorted && return valid_indices
 
-    # MergeSort preserves original packet order for equal timestamps.
-    permutation = sortperm(
+    # Sort the increasing indices in place; MergeSort keeps packet order for equal
+    # timestamps.
+    return sort!(
         valid_indices;
         by = index -> timestamps[index],
         alg = Base.Sort.MergeSort
     )
-
-    return valid_indices[permutation]
 end
 
 """
