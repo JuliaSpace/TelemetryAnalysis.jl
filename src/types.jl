@@ -164,7 +164,7 @@ Defines a telemetry database.
 end
 
 """
-    DatabaseIndex
+    struct DatabaseIndex
 
 Ephemeral validated index of a telemetry database. It maps aliases to canonical labels and
 stores canonical labels in deterministic lexical order. An index is built fresh for public
@@ -196,14 +196,14 @@ const _STAGES_THROUGH_RAW = _STAGE_BYTE | _STAGE_RAW
 const _STAGES_THROUGH_PROCESSED = _STAGES_THROUGH_RAW | _STAGE_PROCESSED
 
 """
-    AbstractExecutionNode
+    abstract type AbstractExecutionNode
 
 Abstract boundary for heterogeneous internal execution nodes.
 """
 abstract type AbstractExecutionNode end
 
 """
-    ExecutionNode
+    struct ExecutionNode
 
 Internal variable executor whose callback fields retain their concrete callable types.
 
@@ -224,7 +224,7 @@ struct ExecutionNode{B, R, F} <: AbstractExecutionNode
 end
 
 """
-    OutputSpec
+    struct OutputSpec
 
 Precomputed mapping from one requested view to its canonical value and output name.
 
@@ -243,7 +243,7 @@ struct OutputSpec
 end
 
 """
-    ExecutionPlan
+    struct ExecutionPlan
 
 Fresh uncached processing plan containing topologically ordered nodes and output mappings.
 
@@ -260,7 +260,7 @@ struct ExecutionPlan
 end
 
 """
-    PacketExecutionState
+    struct PacketExecutionState
 
 Mutable values used while executing a plan for one packet. The node slot buffers may be
 reused across packets within one task because stage masks determine which slots are written

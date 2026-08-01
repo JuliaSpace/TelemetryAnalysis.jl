@@ -8,7 +8,11 @@ export process_telemetry_packets
 
 """
     process_telemetry_packets(
-        [tmpackets::Vector{TelemetryPacket{T}}];
+        database::TelemetryDatabase,
+        kwargs...
+    ) where T <: TelemetrySource -> DataFrame
+    process_telemetry_packets(
+        tmpackets::Vector{TelemetryPacket{T}};
         database::TelemetryDatabase,
         kwargs...
     ) where T <: TelemetrySource -> DataFrame
@@ -18,7 +22,12 @@ values of **all** registered variables in lexical canonical-label order. If `tmp
 are not passed, the default telemetry packets will be used.
 
     process_telemetry_packets(
-        [tmpackets::Vector{TelemetryPacket{T}},]
+        telemetries::AbstractVector;
+        database::TelemetryDatabase,
+        kwargs...
+    ) where T <: TelemetrySource -> DataFrame
+    process_telemetry_packets(
+        tmpackets::Vector{TelemetryPacket{T}},
         telemetries::AbstractVector;
         database::TelemetryDatabase,
         kwargs...
@@ -32,7 +41,12 @@ by the second symbol in the pair.  For more information, see the section below.
 If `tmpackets` are not passed, the default telemetry packets will be used.
 
     process_telemetry_packets(
-        [tmpackets::Vector{TelemetryPacket{T}},]
+        telemetries::Vector{Pair{Symbol, Symbol}};
+        database::TelemetryDatabase,
+        kwargs...
+    ) where T <: TelemetrySource -> DataFrame
+    process_telemetry_packets(
+        tmpackets::Vector{TelemetryPacket{T}},
         telemetries::Vector{Pair{Symbol, Symbol}};
         database::TelemetryDatabase,
         kwargs...

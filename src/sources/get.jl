@@ -33,13 +33,19 @@ function get_default_telemetry_source()
 end
 
 """
-    get_telemetry(source::T, start_time::DateTime, end_time::DateTime) ->
-        Vector{TelemetryPacket{T}} where T <: TelemetrySource
+    get_telemetry(
+        source::T,
+        start_time::DateTime,
+        end_time::DateTime
+    ) -> Vector{TelemetryPacket{T}} where T <: TelemetrySource
 
 Get the telemetry data using the `source` between `start_time` and `end_time`.
 
-    get_telemetry(source::T, start_time::DateTime, interval::Unitful.Quantity) ->
-        Vector{TelemetryPacket{T}} where T <: TelemetrySource
+    get_telemetry(
+        source::T,
+        start_time::DateTime,
+        interval::Unitful.Quantity
+    ) -> Vector{TelemetryPacket{T}} where T <: TelemetrySource
 
 Get the telemetry data using the `source` from `start_time` up to `start_time + interval`.
 `interval` must have time units. It is converted with `uconvert(Unitful.ms, interval)` and
@@ -80,8 +86,11 @@ function get_telemetry(
 end
 
 """
-    _finalize_telemetry_fetch(result, ::Type{T}, start_timestamp) ->
-        Vector{TelemetryPacket{T}}
+    _finalize_telemetry_fetch(
+        result,
+        ::Type{T},
+        start_timestamp
+    ) -> Vector{TelemetryPacket{T}}
 
 Validate a source result, report its packet count, and publish it as the default collection.
 """

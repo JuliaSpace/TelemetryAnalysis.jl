@@ -30,8 +30,12 @@ macro register_interactive_source(source)
 end
 
 """
-    init_telemetry_source([::Type{T}, vargs...; kwargs...]) -> Union{T, Nothing}
-        where T <: TelemetrySource
+    init_telemetry_source() where T <: TelemetrySource -> Union{T, Nothing} 
+    init_telemetry_source(
+        ::Type{T},
+        vargs...;
+        kwargs...
+    ) where T <: TelemetrySource -> Union{T, Nothing}
 
 Initialize the telemetry source `T`. If all arguments and keywords are omitted, the function
 selects the source interactively.

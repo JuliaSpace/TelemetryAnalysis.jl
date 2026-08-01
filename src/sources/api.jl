@@ -5,8 +5,11 @@
 ############################################################################################
 
 """
-    _api_init_telemetry_source(::Type{T}, vargs...; kwargs...) -> Union{Nothing, T}
-        where T <: TelemetrySource
+    _api_init_telemetry_source(
+        ::Type{T},
+        vargs...;
+        kwargs...
+    ) where T <: TelemetrySource -> Union{Nothing, T}
 
 API function to initialize a telemetry source of type `T`.
 
@@ -20,8 +23,11 @@ function _api_init_telemetry_source(
 end
 
 """
-    _api_get_telemetry(source::T, start_time::DateTime, end_time::DateTime) ->
-        Vector{TelemetryPacket{T}} where T <: TelemetrySource
+    _api_get_telemetry(
+        source::T,
+        start_time::DateTime,
+        end_time::DateTime
+    ) -> Vector{TelemetryPacket{T}} where T <: TelemetrySource
 
 API function to get telemetry from `source` between `start_time` and `end_time`.
 
