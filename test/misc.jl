@@ -17,6 +17,22 @@
     @test ncodeunits(byte_array_to_hex(fill(0x00, 17))) == 2 + 2 * 17
 end
 
+@testset "Byte array analysis" begin
+    output = mktemp() do path, io
+        redirect_stdout(io) do
+            analyze_byte_array(UInt8[0x01, 0xA2])
+            analyze_byte_array(UInt8[0x01, 0xA2]; order = :ascending, binarysep = false)
+        end
+        flush(io)
+        read(path, String)
+    end
+    @test occursin("0xA2", output)
+    @test occursin("0b0000.0001", output)
+    @test occursin("0b00000001", output)
+
+    @test_throws ArgumentError analyze_byte_array(UInt8[0x01]; order = :reversed)
+end
+
 @testset "Bit validation" begin
     @test checkbit(UInt8(0x81), 1)
     @test checkbit(UInt8(0x81), 8)

@@ -12,12 +12,24 @@ const _HEX_DIGITS = codeunits("0123456789ABCDEF")
     analyze_byte_array(byte_array::AbstractVector{UInt8}; kwargs...)
 
 Print a table containing binary, decimal, and hexadecimal representations of `byte_array`.
+
+# Keywords
+
+- `order::Symbol`: If `:descending`, the columns show the last byte first. If `:ascending`,
+    the columns follow the byte order in `byte_array`. Any other value throws an
+    `ArgumentError`. (**Default** = `:descending`)
+- `binarysep::Bool`: If `true`, the binary representation contains a separator between the
+    two nibbles. (**Default** = `true`)
 """
 function analyze_byte_array(
     byte_array::AbstractVector{UInt8};
     order::Symbol = :descending,
     binarysep::Bool = true
 )
+    order in (:ascending, :descending) || throw(ArgumentError(
+        "Invalid order :$order; expected :ascending or :descending."
+    ))
+
     num_bytes = length(byte_array)
 
     column_labels = ["#$i" for i in 1:num_bytes]
