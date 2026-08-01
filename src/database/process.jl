@@ -452,13 +452,16 @@ function _build_output_dataframe(
     valid_indices::Vector{Int},
     outputs::Vector{OutputSpec}
 )
-    # Gather valid slots before narrowing so uninitialized packet slots are never read.
+    # Gather only valid slots so uninitialized packet slots are never read.
     output_timestamps = DateTime[timestamps[index] for index in valid_indices]
     columns           = Pair{Symbol, AbstractVector}[:timestamp => output_timestamps]
 
     for output_index in eachindex(outputs)
-        values = Any[storage[output_index][index] for index in valid_indices]
-        push!(columns, outputs[output_index].output_name => _narrow_output_column(values))
+        push!(
+            columns,
+            outputs[output_index].output_name =>
+                _gather_output_column(storage[output_index], valid_indices)
+        )
     end
 
     # Transfer ownership of newly allocated columns without another DataFrame-level copy.
@@ -466,27 +469,26 @@ function _build_output_dataframe(
 end
 
 """
-    _narrow_output_column(values::Vector{Any}) -> AbstractVector
+    _gather_output_column(slots::Vector{Any}, valid_indices::Vector{Int}) -> AbstractVector
 
-Narrow a nonempty output column to a common non-converting type join, retaining `Any` when
-necessary.
+Gather the valid slots of one output column into a fresh vector using the narrowest
+non-converting type join, retaining `Any` when necessary.
 """
-function _narrow_output_column(values::Vector{Any})
-    isempty(values) && return values
+function _gather_output_column(slots::Vector{Any}, valid_indices::Vector{Int})
+    isempty(valid_indices) && return Any[]
 
     # Join types without numeric promotion so original value representations remain intact.
     element_type = Union{}
-    for value in values
-        element_type = Base.promote_typejoin(element_type, typeof(value))
-    end
-    element_type === Any && return values
-
-    narrowed_values = Vector{element_type}(undef, length(values))
-    for index in eachindex(values)
-        narrowed_values[index] = values[index]
+    for index in valid_indices
+        element_type = Base.promote_typejoin(element_type, typeof(slots[index]))
     end
 
-    return narrowed_values
+    column = Vector{element_type}(undef, length(valid_indices))
+    for (column_index, index) in pairs(valid_indices)
+        column[column_index] = slots[index]
+    end
+
+    return column
 end
 
 ############################################################################################

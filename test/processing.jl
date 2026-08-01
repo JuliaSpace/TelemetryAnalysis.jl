@@ -632,8 +632,11 @@ end
     @test heterogeneous.value == Any[1, "2"]
     @test eltype(heterogeneous.value) === Any
 
+    gather(values) =
+        TelemetryAnalysis._gather_output_column(values, collect(eachindex(values)))
+
     integer_values = Any[UInt64(typemax(UInt64)), Int64(-1)]
-    joined_integers = TelemetryAnalysis._narrow_output_column(integer_values)
+    joined_integers = gather(integer_values)
     @test eltype(joined_integers) === Integer
     @test joined_integers == integer_values
     @test typeof(joined_integers[1]) === UInt64
@@ -641,16 +644,18 @@ end
 
     exact_rational = 1 // 3
     real_values = Any[exact_rational, 0.5]
-    joined_reals = TelemetryAnalysis._narrow_output_column(real_values)
+    joined_reals = gather(real_values)
     @test eltype(joined_reals) === Real
     @test joined_reals[1] === exact_rational
     @test typeof(joined_reals[1]) === Rational{Int}
     @test joined_reals[2] === 0.5
 
     mixed_values = Any[1, "2"]
-    @test TelemetryAnalysis._narrow_output_column(mixed_values) === mixed_values
+    @test gather(mixed_values) == mixed_values
+    @test eltype(gather(mixed_values)) === Any
+    @test eltype(TelemetryAnalysis._gather_output_column(Any[], Int[])) === Any
     homogeneous_values = Any[UInt8(1), UInt8(2)]
-    joined_homogeneous = TelemetryAnalysis._narrow_output_column(homogeneous_values)
+    joined_homogeneous = gather(homogeneous_values)
     @test joined_homogeneous == UInt8[1, 2]
     @test eltype(joined_homogeneous) === UInt8
 end
