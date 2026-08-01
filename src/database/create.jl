@@ -180,9 +180,9 @@ function add_variable!(
         rtf
     )
 
-    variables = copy(database.variables)
-    variables[label] = variable_desc
-    _build_database_index(variables)
+    # Validate the new descriptor and its conflicts before mutating the database.
+    _validate_variable_description(variable_desc)
+    _validate_variable_conflicts(database.variables, variable_desc)
 
     database.variables[label] = variable_desc
     empty!(database._variable_dependencies)
@@ -252,6 +252,50 @@ end
 ############################################################################################
 #                                    Private Functions
 ############################################################################################
+
+"""
+    _validate_variable_conflicts(
+        variables::AbstractDict{Symbol, TelemetryVariableDescription},
+        variable_desc::TelemetryVariableDescription
+    ) -> Nothing
+
+Validate the label and alias conflicts of a new descriptor against the current database
+entries without rebuilding the full database index. The entry stored under the new label is
+ignored because it is being replaced.
+"""
+function _validate_variable_conflicts(
+    variables::AbstractDict{Symbol, TelemetryVariableDescription},
+    variable_desc::TelemetryVariableDescription
+)
+    label = variable_desc.label
+    alias = variable_desc.alias
+
+    if !isnothing(alias)
+        alias === :timestamp && throw(ArgumentError("The alias :timestamp is reserved."))
+        (alias === label || haskey(variables, alias)) && throw(ArgumentError(
+            "Alias :$alias conflicts with variable label :$alias."
+        ))
+    end
+
+    for (existing_label, existing_desc) in variables
+        # Skip the replaced entry because its label and alias are being overwritten.
+        existing_label === label && continue
+
+        existing_alias = existing_desc.alias
+        isnothing(existing_alias) && continue
+
+        existing_alias === label && throw(ArgumentError(
+            "Variable label :$label conflicts with the alias of variable " *
+            ":$existing_label."
+        ))
+
+        (existing_alias === alias) && throw(ArgumentError(
+            "Alias :$alias is ambiguous between variables :$existing_label and :$label."
+        ))
+    end
+
+    return nothing
+end
 
 function _default_unpack_telemetry(tmpacket::TelemetryPacket{T}) where T<:TelemetrySource
     return tmpacket.data
