@@ -63,8 +63,8 @@ Add a variable to the `database`.
 
 - `database::TelemetryDatabase`: Database.
 - `label::Symbol`: Variable label in the database.
-- `position::Int`: Variable position in the telemetry database.
-- `size::Int`: Size of the variable.
+- `position::Integer`: Variable position in the unpacked telemetry frame.
+- `size::Integer`: Size of the variable.
 - `tf::Function`: Variable transfer function. For more information, see section `Transfer
     function`.
 - `btf::Function`: The bit transfer function for the variable.
