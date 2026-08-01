@@ -230,41 +230,56 @@ function _process_telemetry_packets(
     # Progress meter.
     progress = Progress(packet_count; color = :reset, enabled = show_progress)
 
-    Threads.@threads for packet_index in eachindex(tmpackets)
-        tmpacket = tmpackets[packet_index]
+    # Chunk the packet range so every task reuses one set of node slot buffers.
+    chunk_size = max(1, cld(packet_count, Threads.nthreads()))
+    chunks = collect(Iterators.partition(eachindex(tmpackets), chunk_size))
 
-        # Unpack the telemetry frame.
-        unpacked_frame = database.unpack_telemetry(tmpacket)
+    Threads.@threads for chunk in chunks
+        # Reuse slot buffers across the chunk; stage masks bound which slots are read.
+        buffers = PacketExecutionState(length(plan.nodes))
 
-        if unpacked_frame === nothing
+        for packet_index in chunk
+            tmpacket = tmpackets[packet_index]
+
+            # Unpack the telemetry frame.
+            unpacked_frame = database.unpack_telemetry(tmpacket)
+
+            if unpacked_frame === nothing
+                next!(progress)
+                continue
+            end
+
+            # Ask for the packet timestamp.
+            timestamps[packet_index] = database.get_telemetry_timestamp(tmpacket)
+
+            # Callback contexts must never be shared, so each packet gets a fresh one.
+            state = PacketExecutionState(
+                buffers.byte_arrays,
+                buffers.raw_values,
+                buffers.processed_values,
+                Dict{Symbol, Any}()
+            )
+
+            for node_index in eachindex(plan.nodes)
+                _execute_node!(
+                    state,
+                    plan.nodes[node_index],
+                    unpacked_frame,
+                    node_index,
+                    plan.stage_masks[node_index]
+                )
+            end
+
+            for output_index in eachindex(plan.outputs)
+                output_storage[output_index][packet_index] = _output_value(
+                    state,
+                    plan.outputs[output_index]
+                )
+            end
+
+            validity[packet_index] = true
             next!(progress)
-            continue
         end
-
-        # Ask for the packet timestamp.
-        timestamps[packet_index] = database.get_telemetry_timestamp(tmpacket)
-
-        state = PacketExecutionState(length(plan.nodes))
-
-        for node_index in eachindex(plan.nodes)
-            _execute_node!(
-                state,
-                plan.nodes[node_index],
-                unpacked_frame,
-                node_index,
-                plan.stage_masks[node_index]
-            )
-        end
-
-        for output_index in eachindex(plan.outputs)
-            output_storage[output_index][packet_index] = _output_value(
-                state,
-                plan.outputs[output_index]
-            )
-        end
-
-        validity[packet_index] = true
-        next!(progress)
     end
 
     finish!(progress)

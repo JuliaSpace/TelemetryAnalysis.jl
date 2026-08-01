@@ -267,7 +267,9 @@ end
 """
     PacketExecutionState
 
-Mutable values created independently for each packet while executing a plan.
+Mutable values used while executing a plan for one packet. The node slot buffers may be
+reused across packets within one task because stage masks determine which slots are written
+and read for every packet. The callback context must be fresh for each packet.
 
 # Fields
 
