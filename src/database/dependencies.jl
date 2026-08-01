@@ -253,7 +253,9 @@ function _topological_visit!(
     # States 0, 1, and 2 mean unseen, active, and complete, respectively.
     state = get(states, label, UInt8(0))
     state == 0x02 && return nothing
-    state == 0x01 && error("Cyclic dependency detected at variable :$label.")
+    state == 0x01 && throw(ArgumentError(
+        "Cyclic dependency detected at variable :$label."
+    ))
     states[label] = UInt8(1)
 
     if stage_masks[label] & _STAGE_RAW != 0

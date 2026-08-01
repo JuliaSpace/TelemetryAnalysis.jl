@@ -152,7 +152,7 @@ end
     catch error
         error
     end
-    @test cycle_error isa ErrorException
+    @test cycle_error isa ArgumentError
     @test occursin("Cyclic dependency", sprint(showerror, cycle_error))
     @test callback_count[] == 0
 
