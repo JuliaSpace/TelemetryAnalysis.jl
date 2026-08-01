@@ -117,7 +117,7 @@ function show(io::IO, ::MIME"text/plain", var::TelemetryVariableDescription)
     cc = (hascolor ? string(crayon"cyan")        : "")
 
     alias_str = !isnothing(var.alias) ? " ($(var.alias))" : ""
-    endianess_str = var.endianess == :bigendian ? "Big endian" : "Little endian"
+    endianness_str = var.endianness == :bigendian ? "Big endian" : "Little endian"
 
     println(io, "TelemetryVariableDescription:")
     println(
@@ -125,7 +125,7 @@ function show(io::IO, ::MIME"text/plain", var::TelemetryVariableDescription)
         cy * "                    Label" * cr * " : " * string(var.label) * alias_str,
     )
     println(io, cy * "              Description" * cr * " : " * var.description)
-    println(io, cy * "               Endianness" * cr * " : " * endianess_str)
+    println(io, cy * "               Endianness" * cr * " : " * endianness_str)
     println(io, cy * "                 Position" * cr * " : " * string(var.position))
     println(io, cy * "                     Size" * cr * " : " * string(var.size) * " bytes")
     println(io, cy * "    Bit Transfer function" * cr * " : " * cc * string(var.btf))

@@ -96,8 +96,8 @@ function _validate_variable_description(variable_desc::TelemetryVariableDescript
         "The variable label :timestamp is reserved."
     ))
 
-    variable_desc.endianess in (:littleendian, :bigendian) || throw(ArgumentError(
-        "Invalid endianness :$(variable_desc.endianess) for variable :$label; " *
+    variable_desc.endianness in (:littleendian, :bigendian) || throw(ArgumentError(
+        "Invalid endianness :$(variable_desc.endianness) for variable :$label; " *
         "expected :littleendian or :bigendian."
     ))
 

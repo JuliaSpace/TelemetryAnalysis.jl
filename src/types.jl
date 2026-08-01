@@ -109,7 +109,7 @@ Describe a variable in the telemetry database.
     required to obtain the processed value of this variable. If it is `nothing`, the
     variable does not have dependencies.
 - `description::String`: A description about the variable.
-- `endianess::Symbol`: `:littleendian` or `:bigendian` to indicate the endianness of the
+- `endianness::Symbol`: `:littleendian` or `:bigendian` to indicate the endianness of the
     variable.
 - `label::Symbol`: Variable label.
 - `position::Int`: Variable position in the unpacked telemetry frame.
@@ -127,7 +127,7 @@ Describe a variable in the telemetry database.
     default_view::Symbol
     dependencies::Union{Nothing, Vector{Symbol}}
     description::String
-    endianess::Symbol
+    endianness::Symbol
     label::Symbol
     position::Int
     size::Int

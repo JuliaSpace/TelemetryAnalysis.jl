@@ -194,7 +194,7 @@ end
         descriptor.default_view,
         [:base],
         descriptor.description,
-        descriptor.endianess,
+        descriptor.endianness,
         descriptor.label,
         descriptor.position,
         descriptor.size,
@@ -415,7 +415,7 @@ end
         :unknown,
         descriptor.dependencies,
         descriptor.description,
-        descriptor.endianess,
+        descriptor.endianness,
         descriptor.label,
         descriptor.position,
         descriptor.size,
@@ -429,10 +429,10 @@ end
         TelemetryPacket{TestSource}[], [:value]; database = invalid_default,
         show_progress = false)
 
-    invalid_endianess = test_database()
-    add_identity_variable!(invalid_endianess, :value)
-    descriptor = invalid_endianess.variables[:value]
-    invalid_endianess.variables[:value] = TelemetryVariableDescription(
+    invalid_endianness = test_database()
+    add_identity_variable!(invalid_endianness, :value)
+    descriptor = invalid_endianness.variables[:value]
+    invalid_endianness.variables[:value] = TelemetryVariableDescription(
         descriptor.alias,
         descriptor.default_view,
         descriptor.dependencies,
@@ -446,7 +446,7 @@ end
         descriptor.rtf
     )
     @test_throws ArgumentError process_telemetry_packets(
-        [packet()], [:value]; database = invalid_endianess, show_progress = false)
+        [packet()], [:value]; database = invalid_endianness, show_progress = false)
 
     add_identity_variable!(database, :value_raw)
     @test_throws ArgumentError process_telemetry_packets(
@@ -455,7 +455,7 @@ end
 
     little = database.variables[:value]
     big_database = test_database()
-    add_variable!(big_database, :value, 1, 3, identity; endianess = :bigendian)
+    add_variable!(big_database, :value, 1, 3, identity; endianness = :bigendian)
     bytes = UInt8[1, 2, 3]
     little_frame = TelemetryAnalysis._get_variable_telemetry_frame(bytes, little)
     big_frame = TelemetryAnalysis._get_variable_telemetry_frame(
@@ -490,7 +490,7 @@ end
         collect(byte_array)
     end
     add_variable!(callback_database, :value, 1, 3, identity, btf, rtf;
-        endianess = :bigendian)
+        endianness = :bigendian)
     callback_output = process_telemetry_packets([packet(bytes)], [:value];
         database = callback_database, show_progress = false)
     @test callback_output.value == [UInt8[3, 2, 1]]
@@ -511,7 +511,7 @@ end
     @test parent(little_frame) === bytes
 
     big_database = test_database()
-    add_variable!(big_database, :value, 2, 2, identity; endianess = :bigendian)
+    add_variable!(big_database, :value, 2, 2, identity; endianness = :bigendian)
     big_frame = TelemetryAnalysis._get_variable_telemetry_frame(
         bytes, big_database.variables[:value])
     @test collect(big_frame) == UInt8[30, 20]

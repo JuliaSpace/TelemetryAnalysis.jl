@@ -125,7 +125,7 @@ add_variable!(
     default_view::Symbol = :processed,
     dependencies::Union{Nothing, Vector{Symbol}} = nothing,
     description::String = "",
-    endianess::Symbol = :littleendian,
+    endianness::Symbol = :littleendian,
 )
 ```
 
@@ -140,7 +140,7 @@ add_variable!(
     default_view::Symbol = :processed,
     dependencies::Vector{Symbol},
     description::String = "",
-    endianess::Symbol = :littleendian,
+    endianness::Symbol = :littleendian,
 )
 ```
 
@@ -173,7 +173,7 @@ This function allows the following keywords:
   variable does not have dependencies. It is required as a nonempty `Vector{Symbol}` for a
   derived-only variable. (**Default for frame-backed variables** = `nothing`)
 - `description::String`: A description of the variable. (**Default** = `""`)
-- `endianess::Symbol`: `:littleendian` or `:bigendian` to indicate the endianness of the
+- `endianness::Symbol`: `:littleendian` or `:bigendian` to indicate the endianness of the
   variable. (**Default** = `:littleendian`)
 
 ### Bit transfer function
@@ -186,7 +186,7 @@ function btf(frame::AbstractVector{UInt8})::AbstractVector{UInt8}
 
 Its purpose is to obtain the `frame` from the telemetry and extract the bits related to the
 current telemetry variable. The `frame` is a set of bytes obtained from the variable
-parameters `position`, `size`, and `endianess`. Callback byte views are ephemeral and
+parameters `position`, `size`, and `endianness`. Callback byte views are ephemeral and
 read-only; callbacks must not mutate or retain them.
 
 ### Raw transfer function

@@ -547,7 +547,7 @@ function _get_variable_telemetry_frame(
     initial_byte = first_frame_index + (position - 1)
     end_byte = initial_byte + (size - 1)
 
-    if variable_desc.endianess == :bigendian
+    if variable_desc.endianness == :bigendian
         # Reverse with a negative-stride view so big-endian extraction remains zero-copy.
         return @view unpacked_frame[end_byte:-1:initial_byte]
     else

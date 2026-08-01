@@ -22,7 +22,7 @@
     @test_throws ArgumentError add_identity_variable!(database, :pressure; alias = :temp)
 
     @test_throws ArgumentError add_identity_variable!(database, :invalid;
-        endianess = :middle)
+        endianness = :middle)
     @test_throws ArgumentError add_identity_variable!(database, :invalid;
         default_view = :unknown)
     @test_throws ArgumentError add_variable!(database, :invalid, 0, 1, identity)
@@ -75,7 +75,7 @@
         second.default_view,
         second.dependencies,
         second.description,
-        second.endianess,
+        second.endianness,
         :second,
         second.position,
         second.size,

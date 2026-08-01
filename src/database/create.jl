@@ -90,7 +90,7 @@ Add a variable to the `database`.
     required to obtain the processed value of this variable. If it is `nothing`, then the
     variable does not have dependencies. (**Default** = `nothing`)
 - `description::String`: A description about the variable.
-- `endianess::Symbol`: `:littleendian` or `:bigendian` to indicate the endianness of the
+- `endianness::Symbol`: `:littleendian` or `:bigendian` to indicate the endianness of the
     variable. (**Default** = `:littleendian`)
 
 # Bit transfer function
@@ -103,7 +103,7 @@ function btf(frame::AbstractVector{UInt8})::AbstractVector{UInt8}
 
 Its purpose is to obtain the bits related to the current variable from `frame`. The frame is
 an ephemeral, read-only `AbstractVector{UInt8}` view obtained from `position`, `size`, and
-`endianess`. The callback must not mutate or retain it.
+`endianness`. The callback must not mutate or retain it.
 
 # Raw transfer function
 
@@ -157,7 +157,7 @@ function add_variable!(
     default_view::Symbol = :processed,
     dependencies::Union{Nothing, Vector{Symbol}} = nothing,
     description::String = "",
-    endianess::Symbol = :littleendian
+    endianness::Symbol = :littleendian
 )
     copied_dependencies = isnothing(dependencies) ? nothing : copy(dependencies)
     _validate_variable_range(position, size, copied_dependencies, label)
@@ -171,7 +171,7 @@ function add_variable!(
         default_view,
         copied_dependencies,
         rstrip(description, '\n'),
-        endianess,
+        endianness,
         label,
         Int(position),
         Int(size),
@@ -197,7 +197,7 @@ function add_variable!(
     default_view::Symbol = :processed,
     dependencies::Vector{Symbol},
     description::String = "",
-    endianess::Symbol = :littleendian
+    endianness::Symbol = :littleendian
 )
     if isempty(dependencies)
         throw(ArgumentError("A derived variable must have dependencies."))
@@ -217,7 +217,7 @@ function add_variable!(
         default_view,
         dependencies,
         description,
-        endianess
+        endianness
     )
 end
 
@@ -234,7 +234,7 @@ function add_variable!(database::TelemetryDatabase, tvd::TelemetryVariableDescri
         default_view = tvd.default_view,
         dependencies = tvd.dependencies,
         description = tvd.description,
-        endianess = tvd.endianess
+        endianness = tvd.endianness
     )
     return nothing
 end
