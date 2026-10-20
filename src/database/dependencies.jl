@@ -281,5 +281,6 @@ function _execution_node(variable_desc::TelemetryVariableDescription)
         variable_desc.btf,
         variable_desc.rtf,
         variable_desc.tf,
+        variable_desc.extract,
     )
 end
