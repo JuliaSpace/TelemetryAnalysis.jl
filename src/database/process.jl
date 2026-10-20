@@ -291,17 +291,23 @@ Execute the required stages for one concrete-callback node.
 """
 function _execute_node!(
     state::PacketExecutionState,
-    node::ExecutionNode{B, R, F, X},
+    node::ExecutionNode{B, R, F},
     unpacked_frame::AbstractVector{UInt8},
     node_index::Int,
     stage_mask::UInt8,
-) where {B, R, F, X}
-    # Execute one cumulative stage mask so duplicate outputs share all callback results.
-    variable_frame = if X === Nothing
-        _get_variable_telemetry_frame(unpacked_frame, node.variable_desc)
-    else
-        node.extract(unpacked_frame)
-    end
+) where {B, R, F}
+    variable_frame = _get_variable_telemetry_frame(unpacked_frame, node.variable_desc)
+    return _execute_stages!(state, node, variable_frame, node_index, stage_mask)
+end
+
+function _execute_node!(
+    state::PacketExecutionState,
+    node::ExtractExecutionNode{N, X},
+    unpacked_frame::AbstractVector{UInt8},
+    node_index::Int,
+    stage_mask::UInt8,
+) where {N, X}
+    variable_frame = node.extract(unpacked_frame)
 
     # A variable absent from this packet is `missing` in every stage.
     if variable_frame === nothing
@@ -312,6 +318,22 @@ function _execute_node!(
         return nothing
     end
 
+    return _execute_stages!(state, node.node, variable_frame, node_index, stage_mask)
+end
+
+"""
+    _execute_stages!(state, node, variable_frame, node_index, stage_mask) -> Nothing
+
+Execute the required stages for one node from its variable frame.
+"""
+function _execute_stages!(
+    state::PacketExecutionState,
+    node::ExecutionNode{B, R, F},
+    variable_frame,
+    node_index::Int,
+    stage_mask::UInt8,
+) where {B, R, F}
+    # Execute one cumulative stage mask so duplicate outputs share all callback results.
     byte_array = _execute_btf(node, variable_frame)
 
     if !(byte_array isa AbstractVector{UInt8})

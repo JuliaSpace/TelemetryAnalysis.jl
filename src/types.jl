@@ -248,14 +248,30 @@ Internal variable executor whose callback fields retain their concrete callable 
 - `btf::B`: Concrete bit transfer callback.
 - `rtf::R`: Concrete raw transfer callback.
 - `tf::F`: Concrete processed transfer callback.
-- `extract::X`: Concrete extract callback, or `nothing` when the variable uses its position.
 """
-struct ExecutionNode{B, R, F, X} <: AbstractExecutionNode
+struct ExecutionNode{B, R, F} <: AbstractExecutionNode
     label::Symbol
     variable_desc::TelemetryVariableDescription
     btf::B
     rtf::R
     tf::F
+end
+
+"""
+    struct ExtractExecutionNode
+
+Internal executor for a variable with an extract callback. Variables without one use a plain
+[`ExecutionNode`](@ref), so they do not pay for this feature.
+
+# Fields
+
+- `label::Symbol`: Canonical variable label.
+- `node::N`: Executor of the byte, raw, and processed stages.
+- `extract::X`: Concrete extract callback.
+"""
+struct ExtractExecutionNode{N <: ExecutionNode, X} <: AbstractExecutionNode
+    label::Symbol
+    node::N
     extract::X
 end
 
