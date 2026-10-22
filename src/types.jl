@@ -114,6 +114,9 @@ Describe a variable in the telemetry database.
 - `rtf::Function`: Raw transfer function to obtain the raw value from the byte array. Its
     byte input is ephemeral and read-only and must not be mutated or retained. It can be an
     `AbstractVector` view, including when the default bit transfer function is used.
+- `extract::Union{Nothing, Function}`: Optional function that obtains the variable frame
+    from the unpacked telemetry frame, replacing `position`, `size`, and `endianness`. See
+    [`add_variable!`](@ref). (**Default**: `nothing`)
 """
 @kwdef struct TelemetryVariableDescription
     alias::Union{Nothing, Symbol}
@@ -127,6 +130,37 @@ Describe a variable in the telemetry database.
     tf::Function
     btf::Function
     rtf::Function
+    extract::Union{Nothing, Function} = nothing
+end
+
+# Keep the positional constructor from before the `extract` field was added.
+function TelemetryVariableDescription(
+    alias,
+    default_view,
+    dependencies,
+    description,
+    endianness,
+    label,
+    position,
+    size,
+    tf,
+    btf,
+    rtf,
+)
+    return TelemetryVariableDescription(
+        alias,
+        default_view,
+        dependencies,
+        description,
+        endianness,
+        label,
+        position,
+        size,
+        tf,
+        btf,
+        rtf,
+        nothing,
+    )
 end
 
 """
@@ -221,6 +255,24 @@ struct ExecutionNode{B, R, F} <: AbstractExecutionNode
     btf::B
     rtf::R
     tf::F
+end
+
+"""
+    struct ExtractExecutionNode
+
+Internal executor for a variable with an extract callback. Variables without one use a plain
+[`ExecutionNode`](@ref), so they do not pay for this feature.
+
+# Fields
+
+- `label::Symbol`: Canonical variable label.
+- `node::N`: Executor of the byte, raw, and processed stages.
+- `extract::X`: Concrete extract callback.
+"""
+struct ExtractExecutionNode{N <: ExecutionNode, X} <: AbstractExecutionNode
+    label::Symbol
+    node::N
+    extract::X
 end
 
 """

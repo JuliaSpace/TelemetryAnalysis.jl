@@ -110,17 +110,33 @@ function _validate_variable_description(variable_desc::TelemetryVariableDescript
     )
 
     _validate_variable_range(
-        variable_desc.position, variable_desc.size, variable_desc.dependencies, label
+        variable_desc.position,
+        variable_desc.size,
+        variable_desc.dependencies,
+        label,
+        variable_desc.extract,
     )
     return nothing
 end
 
 """
-    _validate_variable_range(position, size, dependencies, label) -> Nothing
+    _validate_variable_range(position, size, dependencies, label, extract = nothing) -> Nothing
 
-Validate the frame-backed or derived-only position and size convention.
+Validate the frame-backed, extract-backed, or derived-only position and size convention.
 """
-function _validate_variable_range(position, size, dependencies, label::Symbol)
+function _validate_variable_range(
+    position, size, dependencies, label::Symbol, extract = nothing
+)
+    # Extract-backed variables locate themselves, so their position and size are unused.
+    if !isnothing(extract)
+        (iszero(position) && iszero(size)) || throw(
+            ArgumentError(
+                "Extract-backed variable :$label must use position 0 and size 0."
+            ),
+        )
+        return nothing
+    end
+
     # Reserve zero position and size exclusively for dependency-backed derived variables.
     if iszero(position) && iszero(size)
         if isnothing(dependencies) || isempty(dependencies)

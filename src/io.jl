@@ -135,6 +135,10 @@ function show(io::IO, ::MIME"text/plain", var::TelemetryVariableDescription)
     println(io, cy * "    Bit Transfer function" * cr * " : " * cc * string(var.btf))
     println(io, cy * "    Raw Transfer function" * cr * " : " * cc * string(var.rtf))
     print(io, cy * "        Transfer function" * cr * " : " * cc * string(var.tf))
+    isnothing(var.extract) || print(
+        io,
+        "\n" * cy * "         Extract function" * cr * " : " * cc * string(var.extract),
+    )
 
     return nothing
 end

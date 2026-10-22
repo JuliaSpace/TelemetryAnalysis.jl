@@ -92,6 +92,24 @@ Add a variable to the `database`.
 - `description::String`: A description about the variable.
 - `endianness::Symbol`: `:littleendian` or `:bigendian` to indicate the endianness of the
     variable. (**Default** = `:littleendian`)
+- `extract::Union{Nothing, Function}`: Function that obtains the variable frame from the
+    unpacked telemetry frame, for variables whose location changes from packet to packet.
+    If it is not `nothing`, `position` and `size` must be 0. For more information, see
+    section `Extract function`. (**Default** = `nothing`)
+
+# Extract function
+
+The extract function must have the following signature:
+
+```julia
+function extract(frame::AbstractVector{UInt8})::Union{Nothing, AbstractVector{UInt8}}
+```
+
+It receives the whole unpacked frame and returns the variable frame that is passed to the bit
+transfer function, already in the variable byte order, since `endianness` is not applied.
+Returning `nothing` means the variable is not present in this packet: the byte array, raw,
+and processed values become `missing` and the transfer functions are not called. The frame is
+ephemeral and read-only and must not be mutated or retained.
 
 # Bit transfer function
 
@@ -158,9 +176,10 @@ function add_variable!(
     dependencies::Union{Nothing, Vector{Symbol}} = nothing,
     description::String = "",
     endianness::Symbol = :littleendian,
+    extract::Union{Nothing, Function} = nothing,
 )
     copied_dependencies = isnothing(dependencies) ? nothing : copy(dependencies)
-    _validate_variable_range(position, size, copied_dependencies, label)
+    _validate_variable_range(position, size, copied_dependencies, label, extract)
 
     if isempty(description)
         description = "Variable $label"
@@ -178,6 +197,7 @@ function add_variable!(
         tf,
         btf,
         rtf,
+        extract,
     )
 
     # Validate the new descriptor and its conflicts before mutating the database.
@@ -235,6 +255,7 @@ function add_variable!(database::TelemetryDatabase, tvd::TelemetryVariableDescri
         dependencies = tvd.dependencies,
         description = tvd.description,
         endianness = tvd.endianness,
+        extract = tvd.extract,
     )
     return nothing
 end

@@ -1,6 +1,16 @@
 TelemetryAnalysis.jl Changelog
 ==============================
 
+Version 3.1.0
+-------------
+
+- ![Feature][badge-feature] Variables can now set an `extract` function, which receives the
+  whole unpacked frame and returns the variable frame, or `nothing` when the variable is not
+  in that packet. This supports variables whose location depends on the packet content, such
+  as a field that only exists in one packet type. Absent variables are `missing` in every
+  view, and the transfer functions are not called for them. Variables without `extract`
+  behave as before.
+
 Version 3.0.1
 -------------
 

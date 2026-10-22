@@ -829,3 +829,65 @@ end
     @test completion === :ok
     @test completion === :ok && success(process)
 end
+
+@testset "Extract callbacks" begin
+    database = test_database()
+    add_identity_variable!(database, :selector, 1)
+    # Read byte 3 only when the selector byte is 1, emulating a conditional placement.
+    extract = frame -> frame[1] == 0x01 ? view(frame, 3:4) : nothing
+    add_variable!(
+        database,
+        :conditional,
+        0,
+        0,
+        raw -> Int(raw) * 2,
+        identity,
+        bytes -> bytes[2];
+        extract,
+    )
+    add_variable!(
+        database,
+        :derived,
+        (raw, context) -> context[:conditional].processed;
+        dependencies = [:conditional],
+    )
+
+    packets = [packet(UInt8[1, 0, 3, 4]), packet(UInt8[2, 0, 3, 4])]
+    for view in (:byte_array, :byte_array_hex, :raw, :processed)
+        result = process_telemetry_packets(
+            packets, [:conditional => view]; database, show_progress = false
+        )
+        # Column 1 is the timestamp.
+        @test ismissing(result[2, 2])
+    end
+
+    result = process_telemetry_packets(
+        packets, [:conditional, :derived]; database, show_progress = false
+    )
+    @test result.conditional[1] == 8
+    @test ismissing(result.conditional[2])
+    @test result.derived[1] == 8
+    @test ismissing(result.derived[2])
+    @test database.variables[:conditional].extract === extract
+    @test database.variables[:selector].extract === nothing
+
+    # Extract-backed variables ignore position and size, so they must be zero.
+    @test_throws ArgumentError add_variable!(database, :bad, 1, 1, identity; extract)
+
+    # The positional constructor without `extract` keeps working.
+    descriptor = database.variables[:selector]
+    copied = TelemetryVariableDescription(
+        descriptor.alias,
+        descriptor.default_view,
+        descriptor.dependencies,
+        descriptor.description,
+        descriptor.endianness,
+        descriptor.label,
+        descriptor.position,
+        descriptor.size,
+        descriptor.tf,
+        descriptor.btf,
+        descriptor.rtf,
+    )
+    @test copied.extract === nothing
+end

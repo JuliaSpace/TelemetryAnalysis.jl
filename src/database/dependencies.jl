@@ -59,7 +59,7 @@ function _build_execution_plan(
 
     for label in ordered_labels
         variable_desc = _get_variable_description(label, database, index)
-        push!(nodes, _execution_node(variable_desc))
+        _push_execution_node!(nodes, variable_desc)
         push!(ordered_masks, stage_masks[label])
     end
 
@@ -282,4 +282,26 @@ function _execution_node(variable_desc::TelemetryVariableDescription)
         variable_desc.rtf,
         variable_desc.tf,
     )
+end
+
+"""
+    _push_execution_node!(nodes, variable_desc) -> Nothing
+
+Push the execution node of `variable_desc` to `nodes`, wrapped in an `ExtractExecutionNode`
+when the variable has an extract callback.
+"""
+function _push_execution_node!(
+    nodes::Vector{AbstractExecutionNode}, variable_desc::TelemetryVariableDescription
+)
+    node = _execution_node(variable_desc)
+
+    # Push from each branch so plan building never tests which node type it holds.
+    extract = variable_desc.extract
+    if isnothing(extract)
+        push!(nodes, node)
+    else
+        push!(nodes, ExtractExecutionNode(variable_desc.label, node, extract))
+    end
+
+    return nothing
 end
