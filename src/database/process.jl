@@ -494,7 +494,10 @@ function _gather_output_column(slots::Vector{Any}, valid_indices::Vector{Int})
     # Join types without numeric promotion so original value representations remain intact.
     element_type = Union{}
     for index in valid_indices
-        element_type = Base.promote_typejoin(element_type, typeof(slots[index]))
+        value_type = typeof(slots[index])
+        # Joining a subtype of the current type returns that type, so skip the costly join.
+        value_type <: element_type && continue
+        element_type = Base.promote_typejoin(element_type, value_type)
     end
 
     column = Vector{element_type}(undef, length(valid_indices))
