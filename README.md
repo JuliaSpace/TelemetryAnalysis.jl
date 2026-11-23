@@ -1,5 +1,10 @@
 # TelemetryAnalysis.jl
 
+[![CI](https://img.shields.io/github/actions/workflow/status/JuliaSpace/TelemetryAnalysis.jl/ci.yml?style=flat-square&logo=githubactions&logoColor=white&labelColor=475569&label=CI)](https://github.com/JuliaSpace/TelemetryAnalysis.jl/actions/workflows/ci.yml)
+[![Codecov](https://img.shields.io/codecov/c/github/JuliaSpace/TelemetryAnalysis.jl?style=flat-square&logo=codecov&logoColor=white&labelColor=475569)](https://codecov.io/gh/JuliaSpace/TelemetryAnalysis.jl)
+[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495D1?style=flat-square&logo=julia&logoColor=white&labelColor=475569)](https://github.com/invenia/BlueStyle)
+[![License](https://img.shields.io/github/license/JuliaSpace/TelemetryAnalysis.jl?style=flat-square&logo=readme&logoColor=white&labelColor=475569&color=0284C7)](https://github.com/JuliaSpace/TelemetryAnalysis.jl/blob/main/LICENSE.txt)
+
 This package defines an API to fetch and process telemetry packets from satellites.
 
 Notice that this package does not provide a complete set of functionalities by itself. The
