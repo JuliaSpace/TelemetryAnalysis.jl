@@ -1,6 +1,12 @@
 TelemetryAnalysis.jl Changelog
 ==============================
 
+Version 3.1.1
+-------------
+
+- ![Enhancement][badge-enhancement] Skip redundant type joins when gathering the output
+  columns during packet processing, reducing processing time. (PR [#4][gh-pr-4])
+
 Version 3.1.0
 -------------
 
@@ -112,3 +118,5 @@ Version 1.0.0
 [badge-enhancement]: https://img.shields.io/badge/Enhancement-0284C7?style=flat-square
 [badge-bugfix]: https://img.shields.io/badge/Bugfix-DB2777?style=flat-square
 [badge-info]: https://img.shields.io/badge/Info-475569?style=flat-square
+
+[gh-pr-4]: https://github.com/JuliaSpace/TelemetryAnalysis.jl/pull/4
