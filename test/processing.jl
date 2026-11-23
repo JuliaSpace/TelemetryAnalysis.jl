@@ -699,6 +699,25 @@ end
     joined_homogeneous = gather(homogeneous_values)
     @test joined_homogeneous == UInt8[1, 2]
     @test eltype(joined_homogeneous) === UInt8
+
+    # Skipping values whose type is already in the join must give the same element type as
+    # joining every value.
+    join_all(values) = foldl(
+        (joined, value) -> Base.promote_typejoin(joined, typeof(value)),
+        values;
+        init = Union{},
+    )
+    for values in (
+        Any[1.0, missing, 2.0, missing, 3.0],
+        Any[missing, 1, nothing, 2, missing],
+        Any[UInt8(1), 2, missing, UInt8(3), 4.0, nothing],
+        Any[1, "2", missing, 3, "4"],
+        Any[missing, missing],
+        Any[nothing, 1 // 3, 0.5, 1 // 3],
+    )
+        @test eltype(gather(values)) === join_all(values)
+        @test isequal(gather(values), values)
+    end
 end
 
 @testset "Output collision validation" begin
